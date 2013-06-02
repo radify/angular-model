@@ -18,7 +18,7 @@ function serialize(obj, prefix) {
 }
 
 
-angular.module('ngModel', ['ng']).factory('$model', ['$http', '$parse', function($http, $parse) {
+angular.module('ur.model', ['ng']).factory('model', ['$http', '$parse', '$q', function($http, $parse, $q) {
 
 	var noop = angular.noop,
 		forEach = angular.forEach,
@@ -49,6 +49,7 @@ angular.module('ngModel', ['ng']).factory('$model', ['$http', '$parse', function
 			query: {},
 			url: null,
 			urlKey: "$links.self",
+			errorsKey: "$errors",
 			autoBox: function(object, data) {
 				var it = function(item) { object.push(Model.create(item)); };
 				var iterate = function() { object.length = 0; forEach(data, it); return object; }
@@ -74,15 +75,10 @@ angular.module('ngModel', ['ng']).factory('$model', ['$http', '$parse', function
 				return object instanceof Model ? expr(object, config.urlKey) || url : url;
 			},
 
-			request: function(object, method, data) {
-				var $q = {};
-
-				forEach(['success', 'error'], function(state) {
-					object[state] = function(callback) { $q[state] = callback; return object; };
-					$q[state] = null;
-				});
-
-				var params = { method: method, url: this.url(object), data: data };
+			request: function(object, method, data, headers) {
+				var params = {
+					method: method, url: this.url(object), data: data, headers: headers || {}
+				};
 
 				if (method === 'PATCH') {
 					angular.extend(params.headers, {
@@ -90,13 +86,29 @@ angular.module('ngModel', ['ng']).factory('$model', ['$http', '$parse', function
 					});
 				}
 
+				var deferred = $q.defer(), promise = deferred.promise;
+
 				$http(params).then(function(resp) {
-					object = (resp.data) ? config.autoBox(object, resp.data) : object;
-					($q.success || noop)(object, resp.headers);
+					resp.data = (resp.data) ? config.autoBox(object, resp.data) : object;
+					deferred.resolve(resp);
 				}, function(reason) {
-					($q.error || noop)(reason);
+					object[config.errorsKey] = reason.data;
+					deferred.reject(reason);
 				});
 
+				object.success = function(callback) {
+					promise.then(function(resp) {
+						callback(resp.data, resp.headers);
+					});
+					return this;
+				};
+
+				object.error = function(callback) {
+					promise.then(null, function(resp) {
+						callback(resp);
+					});
+					return this;
+				};
 				return object;
 			}
 		};
