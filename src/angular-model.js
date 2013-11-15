@@ -1,18 +1,42 @@
 (function(window, angular, undefined) {
 'use strict';
 
-var noop     = angular.noop,
+var noop   = angular.noop,
   forEach  = angular.forEach,
   extend   = angular.extend,
-  copy     = angular.copy,
   isFunc   = angular.isFunction,
   isObject = angular.isObject,
-  isArray  = angular.isArray
+  isArray  = angular.isArray,
+  isUndef  = angular.isUndefined;
 
+function deepExtend(destination, source) {
+  for (var property in source) {
+    if (
+      source[property] && source[property].constructor &&
+      source[property].constructor === Object
+    ) {
+      destination[property] = destination[property] || {};
+      deepExtend(destination[property], source[property]);
+    } else {
+      destination[property] = source[property];
+    }
+  }
+  return destination;
+}
 
-function underscore(str) {
-  var toLower = function($1) { return "_" + $1.toLowerCase(); };
-  return str.replace(/([A-Z])/g, toLower).replace(/^_+/, '');
+function isEmpty(obj) {
+  var name;
+  for (name in obj) return false;
+  return true;
+}
+
+function inherit(parent, extra) {
+  return extend(new (extend(function() {}, {prototype: parent}))(), extra);
+}
+
+function hyphenate(str) {
+  var toLower = function($1) { return "-" + $1.toLowerCase(); };
+  return str.replace(/([A-Z])/g, toLower).replace(/^-+/, '');
 }
 
 function serialize(obj, prefix) {
@@ -29,22 +53,22 @@ function serialize(obj, prefix) {
 
 angular.module('ur.model', []).provider('model', function() {
 
-  // Used to evaluate expressions; initialized by the service invokation
-  var expr;
+  var expr, // Used to evaluate expressions; initialized by the service invokation
+      http, // Provider-level copy of $http service
+      q;    // Provider-level copy of $q service
 
   // "Box" an object value in a model instance if it is present.
   // Otherwise, return an empty model object.
-  function autoBox(config, object, data) {
-    return data ? config.box(object, data) : object;
-  }
-
-  // Box an array of JSON objects into a model collection
-  function boxArray(object, data) {
-    object.length = object.length || 0;
-
-    forEach(data, function(item) {
-      object.push(Model.create(item));
-    });
+  function autoBox(object, model, data) {
+    if (!object) {
+      return isArray(data) ? model.collection(data, true) : model.instance(data);
+    }
+    if (isArray(data) && isArray(object)) {
+      return model.collection(data, true);
+    }
+    if (data && JSON.stringify(data).length > 3) {
+      return extend(object, data);
+    }
     return object;
   }
 
@@ -52,11 +76,18 @@ angular.module('ur.model', []).provider('model', function() {
   var global = {
 
     // Base URL prepended to generated URLs
-    base: null,
+    base: "",
 
     // Extract URL from object, or use default URL
-    url: function(config, object) {
-      return object instanceof Model ? expr(object, config.identity) || this.url : this.url;
+    url: function(object) {
+      if (object instanceof ModelClass) {
+        return object.url();
+      }
+      if (object instanceof ModelInstance || isFunc(object.$model)) {
+        var model = object.$model();
+        return expr(object, model.$config().identity) || model.url();
+      }
+      throw new Error("Could not get URL for " + typeof object);
     }
   };
 
@@ -73,168 +104,179 @@ angular.module('ur.model', []).provider('model', function() {
     identity: "$links.self",
 
     // The name of the key to assign an object map of errors
-    errors: "$errors",
-
-    // Object boxing function
-    box: function(object, data) {
-      return isArray(object) ? boxArray(object, data) : copy(data, object);
-    }
+    errors: "$errors"
   };
 
   var DEFAULT_METHODS = {
 
     // Methods available on the model class
-    $class {
-      find: function(data) {
-        return $factory.request(config.actions.apply('collection', []), 'GET', data);
+    $class: {
+      all: function(data) {
+        return $request(null, this, 'GET', data);
+      },
+      first: function(data) {
+        return this.all(data).then(function(response) {
+          return angular.isArray(response) ? response[0] : response;
+        }, function() {
+          return null;
+        });
       },
       create: function(data) {
-        return this.instance(extend({}, defaults, data || {}));
+        return this.instance(deepExtend(extend({}, this.$config().defaults), data || {}));
       },
-      instance: function(data) {
-        return new ModelInstance(data);
+  
+      // @todo Get methods for related objects
+      $related: function(object) {
+        if (!object.$links) return [];
+  
+        forEach(object.$links, function(url, name) {
+          object.prototype[name] = function() {
+            
+          }
+        });
       }
     },
 
     // Methods available on model instances
     $instance: {
       $save: function(data) {
-        var method = this.$exists() ? 'PATCH' : 'POST';
-        return $factory.request(extend(this, data || {}), method, this);
+        return $request(this, this.$model(), this.$exists() ? 'PATCH' : 'POST', deepExtend(this, data || {}));
       },
       $delete: function() {
-        return $factory.request(this, 'DELETE');
+        return $request(this, this.$model(), 'DELETE');
       },
       $reload: function() {
-        return $factory.request(this, 'GET');
+        return $request(this, this.$model(), 'GET');
       },
       $revert: function() {
         // @todo Reset to previously loaded state
       },
       $exists: function() {
-        return !!expr(this, config.identity);
+        return !!expr(this, this.$model().$config().identity);
       }
     },
 
     // Methods available on model collections
     $collection: {
-      add: function(object) {
-        var self = this;
-        return object.$save().success(function() { self.push(object); });
+      add: function(object, data) {
+        return object.$save(data || {});
       },
       remove: function(index) {
         index = (typeof index !== 'number') ? index = this.indexOf(index) : index;
-
-        var self = this;
-        return self[index].$delete().success(function() { self.splice(index, 1); });
+        var self = this, result = self[index].$delete();
+        result.then(function() { self.splice(index, 1); });
+        return result;
       }
     }
   };
 
+  function $request(object, model, method, data, headers) {
+    var writeMethods = ['POST', 'PUT', 'PATCH'];
+    var defaultHeaders = { 'Content-Type': 'application/json;charset=UTF-8' };
+    var isWrite = writeMethods.indexOf(method) > -1;
+    headers = extend({}, isWrite ? defaultHeaders : {}, headers);
+
+    var deferred = q.defer(), params = {
+      method:  method,
+      url:     global.url(object || model),
+      data:    data,
+      headers: headers
+    };
+
+    if (!isWrite && isObject(data) && !isEmpty(data)) {
+      params.url += (params.url.indexOf('?') > -1 ? '&' : '?') + serialize(data);
+    }
+
+    return extend(deferred.promise, {
+      $response: null,
+      $request: http(params).then(function(response) {
+        deferred.promise.$response = response;
+        deferred.resolve(autoBox(object, model, response.data));
+      }, function(response) {
+        if (model.$config().errors && response.data) {
+          expr(object, model.$config().errors).assign(response.data);
+        }
+        deferred.promise.$response = response;
+        deferred.reject(response);
+      })
+    });
+  }
+
   // Configures a new model, updates an existing model's settings, or updates global settings
-  function config(model, options) {
-    if (isObject(model)) {
-      extend(global, model);
+  function config(name, options) {
+    if (isObject(name)) {
+      extend(global, name);
       return;
     }
-    if (!options) {
-      return registry[model];
+    var base = (registry[name] && registry[name].$config) ? registry[name].$config() : null;
+    options = deepExtend(base || extend({}, DEFAULTS, DEFAULT_METHODS), options);
+
+    if (!options.url) {
+      options.url = global.base.replace(/\/$/, '') + '/' + hyphenate(name);
     }
-    registry[model] = new Model(extend(registry[model] || DEFAULTS, options));
-
-    if (!registry[model].url) {
-      registry[model].url = global.base + underscore(model);
-    }
-
-    forEach(DEFAULT_METHODS, function(val, key) {
-      if (isFunc(val)) {
-        return registry[model][key] = options[key] || key;
-      }
-      registry[model][key] = extend(val, options[key] || {});
-    });
-
-    return this;
+    registry[name] = new ModelClass(options);
   }
 
   extend(this, {
 
-    // Used to add named model configurations, or set global configuration
-    config: function(model, options) {
-      return config.apply(this, model, options);
+    model: function(name, options) {
+      config(name, options);
+      return this;
     },
 
     // Returns the model service
-    $get: ['$http', '$parse', function($http, $parse) {
+    $get: ['$http', '$parse', '$q', function($http, $parse, $q) {
+      q = $q;
+      http = $http;
 
       // Extracts a value from an object based on a string expression
       expr = function(obj, path) {
         return $parse(path)(obj);
       };
 
-      return extend(this, {
-        config: function(model, options) {
-          return config.apply(this, model, options);
-        },
-        get: function(model) {
-          return registry[model];
+      // Adds, gets, or updates a named model configuration
+      return function ModelClassFactory(name, options) {
+        if (!isUndef(options)) {
+          return config(name, options);
         }
-      });
+        return registry[name] || undefined;
+      };
     }]
   });
 
-  function ModelFactory(name, config) {
+  function ModelClass(options) {
 
-    var $factory = {
+    var scopedClassMethods = {
+      $config: function() {
+        return extend({}, options);
+      },
+      url: function() {
+        return options.url;
+      },
+      instance: function(data) {
+        options.$instance = inherit(new ModelInstance(this), options.$instance);
+        return inherit(options.$instance, data || {});
+      },
+      collection: function(data, boxElements) {
+        var owner = this, collection = extend([], extend({
+          $model: function() { return owner; }
+        }, options.$collection));
 
-      request: function(object, method, data, headers) {
-        var params = {
-          method: method,
-          url: this.url(object),
-          data: data,
-          headers: headers || {}
-        };
-
-        if (method === 'PATCH') {
-          extend(params.headers, { 'Content-Type': 'application/json;charset=UTF-8' });
+        if (data && data.length) {
+          for (var i = data.length - 1; i >= 0; i--) {
+            collection.unshift(boxElements ? this.instance(data[i]) : data[i]);
+          }
         }
-        var deferred = $q.defer(), promise = deferred.promise;
-
-        $http(params).then(function(resp) {
-          resp.data = (resp.data) ? config.autoBox(object, resp.data) : object;
-          deferred.resolve(resp);
-        }, function(reason) {
-          object[config.errorsKey] = reason.data;
-          deferred.reject(reason);
-        });
-
-        return extend(object, {
-          $success: function(callback) {
-            promise.then(function(resp) {
-              callback(resp.data, resp.headers);
-            });
-            return this;
-          },
-
-          $error: function(callback) {
-            promise.then(null, function(resp) {
-              callback(resp);
-            });
-            return this;
-          },
-
-          $then: promise.then
-        });
+        return collection;
       }
     };
 
-    function Model(data) {
-      copy(data || {}, this);
-    }
-
-    return Model;
+    extend(this, scopedClassMethods, options.$class);
   }
 
-  return ModelFactory;
+  function ModelInstance(owner) {
+    this.$model = function() { return owner; }
+  }
 
 }).directive('link', ['model', function(model) {
 
@@ -244,7 +286,7 @@ angular.module('ur.model', []).provider('model', function() {
       if (attrs.rel !== "resource" || !attrs.href || !attrs.name) {
         return;
       }
-      // model.config(attrs.name, { url: attrs.href });
+      model(attrs.name, { url: attrs.href, singleton: attrs.singleton ? true : false });
     }
   };
 
