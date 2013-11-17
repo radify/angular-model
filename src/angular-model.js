@@ -235,12 +235,20 @@ angular.module('ur.model', []).provider('model', function() {
       };
 
       // Adds, gets, or updates a named model configuration
-      return function ModelClassFactory(name, options) {
+      return extend(function ModelClassFactory(name, options) {
         if (!isUndef(options)) {
           return config(name, options);
         }
         return registry[name] || undefined;
-      };
+      }, {
+        sync: function(dst, promises) {
+          forEach(promises, function(promise, name) {
+            promise.then(function(value) {
+              dst[name] = value;
+            });
+          });
+        }
+	  });
     }]
   });
 
@@ -275,7 +283,7 @@ angular.module('ur.model', []).provider('model', function() {
   }
 
   function ModelInstance(owner) {
-    this.$model = function() { return owner; }
+    this.$model = function() { return owner; };
   }
 
 }).directive('link', ['model', function(model) {

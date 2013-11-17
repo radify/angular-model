@@ -61,6 +61,8 @@ describe("model", function() {
           $links: {}
         },
         url: "http://api/projects"
+      }).model("Tasks", {
+        url: "http://api/tasks"
       });
     }));
 
@@ -177,6 +179,28 @@ describe("model", function() {
       $httpBackend.flush();
       expect(success.success).toBe(true);
     }));
+
+    describe('sync()', function() {
+      it('should map promise resolution values to object attributes', inject(function(model) {
+        var scope = {},
+            projects = [{ name: "Project 1" }, { name: "Project 2" }],
+            tasks = [{ name: "Task 1" }, { name: "Task 2" }];
+
+        $httpBackend.expectGET("http://api/projects").respond(200, JSON.stringify(projects));
+        $httpBackend.expectGET("http://api/tasks").respond(200, JSON.stringify(tasks));
+
+        model.sync(scope, {
+          projects: model('Projects').all(),
+          tasks: model('Tasks').all()
+        });
+        expect(scope.projects).toBeUndefined();
+        expect(scope.tasks).toBeUndefined();
+
+        $httpBackend.flush();
+        expect(JSON.stringify(scope.projects)).toBe(JSON.stringify(projects));
+        expect(JSON.stringify(scope.tasks)).toBe(JSON.stringify(tasks));
+      }));
+    });
 
     describe("class methods", function() {
       describe("first()", function() {
