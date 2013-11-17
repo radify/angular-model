@@ -180,8 +180,8 @@ describe("model", function() {
       expect(success.success).toBe(true);
     }));
 
-    describe('sync()', function() {
-      it('should map promise resolution values to object attributes', inject(function(model) {
+    describe('load()', function() {
+      it('should map promise resolution values to object attributes asynchronously', inject(function(model) {
         var scope = {},
             projects = [{ name: "Project 1" }, { name: "Project 2" }],
             tasks = [{ name: "Task 1" }, { name: "Task 2" }];
@@ -189,16 +189,19 @@ describe("model", function() {
         $httpBackend.expectGET("http://api/projects").respond(200, JSON.stringify(projects));
         $httpBackend.expectGET("http://api/tasks").respond(200, JSON.stringify(tasks));
 
-        model.sync(scope, {
+        model.load(scope, {
           projects: model('Projects').all(),
           tasks: model('Tasks').all()
         });
         expect(scope.projects).toBeUndefined();
         expect(scope.tasks).toBeUndefined();
 
-        $httpBackend.flush();
+        $httpBackend.flush(1);
         expect(JSON.stringify(scope.projects)).toBe(JSON.stringify(projects));
-        expect(JSON.stringify(scope.tasks)).toBe(JSON.stringify(tasks));
+		expect(scope.tasks).toBeUndefined();
+
+		$httpBackend.flush();
+		expect(JSON.stringify(scope.tasks)).toBe(JSON.stringify(tasks));
       }));
     });
 
