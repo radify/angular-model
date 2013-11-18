@@ -46,7 +46,10 @@ describe("model", function() {
     var $httpBackend;
 
     beforeEach(module(function() {
-      provider.model("Projects", {
+      provider.model("Users", {
+        defaults: { username: "anon" },
+        url: "http://api/users"
+      }).model("Projects", {
         $instance: {
           poster: function() {
             return this.$links.logo || "/img/placeholder/poster.gif";
@@ -85,9 +88,10 @@ describe("model", function() {
 
     it("should create objects with configured default values", inject(function(model) {
       var newProject = model("Projects").create();
+      expect(JSON.stringify(newProject)).toEqual('{"name":"New Project","$links":{}}');
 
-      expect(newProject.name).toEqual("New Project");
-      expect(newProject.$links).toEqual(jasmine.any(Object));
+      var newUser = model("Users").create();
+      expect(JSON.stringify(newUser)).toBe('{"username":"anon"}');
     }));
 
     it("should invoke instance methods with the correct binding", inject(function(model) {

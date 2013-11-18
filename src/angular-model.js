@@ -4,24 +4,22 @@
 var noop   = angular.noop,
   forEach  = angular.forEach,
   extend   = angular.extend,
+  copy     = angular.copy,
   isFunc   = angular.isFunction,
   isObject = angular.isObject,
   isArray  = angular.isArray,
   isUndef  = angular.isUndefined;
 
-function deepExtend(destination, source) {
-  for (var property in source) {
-    if (
-      source[property] && source[property].constructor &&
-      source[property].constructor === Object
-    ) {
-      destination[property] = destination[property] || {};
-      deepExtend(destination[property], source[property]);
-    } else {
-      destination[property] = source[property];
+function deepExtend(dst, source) {
+  for (var prop in source) {
+    if (source[prop] && source[prop].constructor && source[prop].constructor === Object) {
+      dst[prop] = dst[prop] || {};
+      deepExtend(dst[prop], source[prop]);
+      continue;
     }
+    dst[prop] = source[prop];
   }
-  return destination;
+  return dst;
 }
 
 function isEmpty(obj) {
@@ -122,7 +120,7 @@ angular.module('ur.model', []).provider('model', function() {
         });
       },
       create: function(data) {
-        return this.instance(deepExtend(extend({}, this.$config().defaults), data || {}));
+        return this.instance(deepExtend(copy(this.$config().defaults), data || {}));
       },
   
       // @todo Get methods for related objects
@@ -140,7 +138,8 @@ angular.module('ur.model', []).provider('model', function() {
     // Methods available on model instances
     $instance: {
       $save: function(data) {
-        return $request(this, this.$model(), this.$exists() ? 'PATCH' : 'POST', deepExtend(this, data || {}));
+        var method = this.$exists() ? 'PATCH' : 'POST';
+        return $request(this, this.$model(), method, deepExtend(this, data ? copy(data) : {}));
       },
       $delete: function() {
         return $request(this, this.$model(), 'DELETE');
@@ -208,8 +207,10 @@ angular.module('ur.model', []).provider('model', function() {
       extend(global, name);
       return;
     }
-    var base = (registry[name] && registry[name].$config) ? registry[name].$config() : null;
-    options = deepExtend(base || extend({}, DEFAULTS, DEFAULT_METHODS), options);
+    var previous = (registry[name] && registry[name].$config) ? registry[name].$config() : null,
+        base = extend({}, previous ? extend({}, previous) : extend({}, DEFAULTS, DEFAULT_METHODS));
+
+    options = deepExtend(copy(base), options);
 
     if (!options.url) {
       options.url = global.base.replace(/\/$/, '') + '/' + hyphenate(name);
