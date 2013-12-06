@@ -196,16 +196,21 @@ describe("model", function() {
         model.load(scope, {
           projects: model('Projects').all(),
           tasks: model('Tasks').all()
+        }).then(function() {
+          scope.done = true;
         });
         expect(scope.projects).toBeUndefined();
         expect(scope.tasks).toBeUndefined();
+        expect(scope.done).toBeUndefined();
 
         $httpBackend.flush(1);
         expect(JSON.stringify(scope.projects)).toBe(JSON.stringify(projects));
-		expect(scope.tasks).toBeUndefined();
+        expect(scope.tasks).toBeUndefined();
+        expect(scope.done).toBeUndefined();
 
-		$httpBackend.flush();
-		expect(JSON.stringify(scope.tasks)).toBe(JSON.stringify(tasks));
+        $httpBackend.flush();
+        expect(JSON.stringify(scope.tasks)).toBe(JSON.stringify(tasks));
+        expect(scope.done).toBe(true);
       }));
     });
 

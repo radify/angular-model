@@ -249,6 +249,7 @@ angular.module('ur.model', []).provider('model', function() {
             dst[name] = value;
           });
         });
+        return q.all(promises);
       };
 
       return ModelClassFactory;
