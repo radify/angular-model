@@ -254,5 +254,31 @@ describe("model", function() {
         }));
       });
     });
+
+    describe("errors", function() {
+      it("should populate on failed request", inject(function(model) {
+        var user, response, id = "http://api/users/5", errors = {
+          email: [
+            "E-mail cannot be empty.",
+            "E-mail is not valid.",
+            "Sorry, this e-mail address is already registered."
+          ],
+          passwordConfirm: "Your passwords must match."
+        };
+
+        $httpBackend.expectPATCH(id).respond(422, JSON.stringify(errors));
+
+        user = model('Users').create({ $links: { self: id }});
+
+        user.$save().then(angular.noop, function(resp) {
+          response = resp;
+        });
+        expect(user.$errors).toBeUndefined();
+
+        $httpBackend.flush();
+        expect(response.status).toBe(422);
+        expect(JSON.stringify(user.$errors)).toEqual(JSON.stringify(errors));
+      }));
+    });
   });
 });

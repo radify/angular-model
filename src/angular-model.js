@@ -83,7 +83,7 @@ angular.module('ur.model', []).provider('model', function() {
       }
       if (object instanceof ModelInstance || isFunc(object.$model)) {
         var model = object.$model();
-        return expr(object, model.$config().identity) || model.url();
+        return expr(object, model.$config().identity).get() || model.url();
       }
       throw new Error("Could not get URL for " + typeof object);
     }
@@ -151,7 +151,7 @@ angular.module('ur.model', []).provider('model', function() {
         // @todo Reset to previously loaded state
       },
       $exists: function() {
-        return !!expr(this, this.$model().$config().identity);
+        return !!expr(this, this.$model().$config().identity).get();
       }
     },
 
@@ -193,7 +193,7 @@ angular.module('ur.model', []).provider('model', function() {
         deferred.resolve(autoBox(object, model, response.data));
       }, function(response) {
         if (model.$config().errors && response.data) {
-          expr(object, model.$config().errors).assign(response.data);
+          expr(object, model.$config().errors).set(response.data);
         }
         deferred.promise.$response = response;
         deferred.reject(response);
@@ -232,7 +232,12 @@ angular.module('ur.model', []).provider('model', function() {
 
       // Extracts a value from an object based on a string expression
       expr = function(obj, path) {
-        return $parse(path)(obj);
+        var parsed = $parse(path);
+
+        return {
+          get: function() { return parsed(obj) },
+          set: function(value) { return parsed.assign(obj, value); }
+        };
       };
 
       // Adds, gets, or updates a named model configuration
