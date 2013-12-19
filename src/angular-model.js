@@ -109,8 +109,8 @@ angular.module('ur.model', []).provider('model', function() {
 
     // Methods available on the model class
     $class: {
-      all: function(data) {
-        return $request(null, this, 'GET', data);
+      all: function(data, headers) {
+        return $request(null, this, 'GET', data, headers);
       },
       first: function(data) {
         return this.all(data).then(function(response) {

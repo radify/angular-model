@@ -184,6 +184,22 @@ describe("model", function() {
       expect(success.success).toBe(true);
     }));
 
+    it("should accept custom headers", inject(function(model) {
+      var success, data = { success: true };
+      $httpBackend.expectGET("http://api/projects", {
+        "Accept": "application/json, text/plain, */*",
+        "x-some-header": "foo"
+      }).respond(200, JSON.stringify(data));
+
+      model("Projects").all(null, {
+        'x-some-header': 'foo'
+      }).then(function(result) {
+        success = result;
+      });
+      $httpBackend.flush();
+      expect(success.success).toBe(true);
+    }));
+
     describe('load()', function() {
       it('should map promise resolution values to object attributes asynchronously', inject(function(model) {
         var scope = {},
