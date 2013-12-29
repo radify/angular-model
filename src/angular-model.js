@@ -130,7 +130,7 @@ angular.module('ur.model', []).provider('model', function() {
         forEach(object.$links, function(url, name) {
           object.prototype[name] = function() {
             
-          }
+          };
         });
       }
     },
@@ -235,8 +235,8 @@ angular.module('ur.model', []).provider('model', function() {
         var parsed = $parse(path);
 
         return {
-          get: function() { return parsed(obj) },
-          set: function(value) { return parsed.assign(obj, value); }
+          get: function() { return parsed(obj); },
+          set: function(value) { return parsed.assign(obj || {}, value); }
         };
       };
 
