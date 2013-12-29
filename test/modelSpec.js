@@ -295,6 +295,14 @@ describe("model", function() {
         expect(response.status).toBe(422);
         expect(JSON.stringify(user.$errors)).toEqual(JSON.stringify(errors));
       }));
+
+      it("should handle a failed request to GET all", inject(function(model) {
+        $httpBackend.expectGET('http://api/users').respond(404, []);
+
+        users = model('Users').all();
+
+        $httpBackend.flush();
+      }));
     });
   });
 });

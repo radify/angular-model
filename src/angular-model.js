@@ -236,7 +236,7 @@ angular.module('ur.model', []).provider('model', function() {
 
         return {
           get: function() { return parsed(obj); },
-          set: function(value) { return parsed.assign(obj, value); }
+          set: function(value) { return parsed.assign(obj || {}, value); }
         };
       };
 
