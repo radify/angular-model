@@ -304,5 +304,129 @@ describe("model", function() {
         $httpBackend.flush();
       }));
     });
+
+    describe('dirty checking', function() {
+      var user;
+
+      beforeEach(inject(function(model) {
+        model('Users').first().then(function(response) {
+          user = response;
+        });
+
+        $httpBackend.expectGET('http://api/users').respond(200, [
+          {
+            $links: {
+              self: "http://api/users/100"
+            },
+            _id: 100,
+            name: "Some Person",
+            role: "User"
+          }
+        ]);
+
+        $httpBackend.flush();
+      }));
+
+      it('should tell if an instance has changed', function() {
+        expect(user.$dirty()).toBe(false);
+        expect(user.$pristine()).toBe(true);
+
+        user.name = "Some other person";
+
+        expect(user.$dirty()).toBe(true);
+        expect(user.$pristine()).toBe(false);
+      });
+
+      it('should revert to original state', function() {
+        user.name = "Some other person";
+
+        user.$revert();
+
+        expect(user.$dirty()).toBe(false);
+
+        var equals = angular.equals(user, {
+          _id: 100,
+          name: "Some Person",
+          role: "User"
+        });
+
+        expect(equals).toBe(true);
+      });
+
+      it('should return modified fields', function() {
+        angular.extend(user, {
+          name: "New name",
+          role: "Admin"
+        });
+
+        expect(user.$modified()).toEqual({
+          name: "New name",
+          role: "Admin"
+        });
+      });
+
+      it('should only PATCH modified fields', function() {
+        angular.extend(user, {
+          name: "Newman",
+          role: "Intern"
+        });
+
+        user.$save();
+
+        $httpBackend.expectPATCH('http://api/users/100', {
+          name: "Newman",
+          role: "Intern"
+        }).respond(200);
+        $httpBackend.flush();
+      });
+
+      it('should update original state on successful save', function() {
+        angular.extend(user, {
+          name: "Newman",
+          role: "Intern"
+        });
+
+        user.$save();
+
+        $httpBackend.expectPATCH('http://api/users/100', {
+          name: "Newman",
+          role: "Intern"
+        }).respond(200, {
+          $links: {
+            self: "http://api/users/100"
+          },
+          _id: 100,
+          name: "Newman",
+          role: "Intern"
+        });
+        $httpBackend.flush();
+
+        expect(user.$pristine()).toBe(true);
+        expect(user.$dirty()).toBe(false);
+        expect(user.$modified()).toEqual({});
+      });
+
+      it('should preserve original state on failed save', function() {
+        angular.extend(user, {
+          name: "Newman",
+          role: "Intern"
+        });
+
+        user.$save();
+
+        $httpBackend.expectPATCH('http://api/users/100', {
+          name: "Newman",
+          role: "Intern"
+        }).respond(500);
+        $httpBackend.flush();
+
+        expect(user.$pristine()).toBe(false);
+        expect(user.$dirty()).toBe(true);
+        expect(user.$modified()).toEqual({
+          name: "Newman",
+          role: "Intern"
+        });
+      });
+    });
   });
 });

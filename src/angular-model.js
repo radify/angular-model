@@ -8,7 +8,8 @@ var noop   = angular.noop,
   isFunc   = angular.isFunction,
   isObject = angular.isObject,
   isArray  = angular.isArray,
-  isUndef  = angular.isUndefined;
+  isUndef  = angular.isUndefined,
+  equals   = angular.equals;
 
 function deepExtend(dst, source) {
   for (var prop in source) {
@@ -65,7 +66,9 @@ angular.module('ur.model', []).provider('model', function() {
       return model.collection(data, true);
     }
     if (data && JSON.stringify(data).length > 3) {
-      return extend(object, data);
+      var updated = extend(object, data);
+      extend(updated.$original, data);
+      return updated;
     }
     return object;
   }
@@ -137,9 +140,12 @@ angular.module('ur.model', []).provider('model', function() {
 
     // Methods available on model instances
     $instance: {
+      $original: {},
       $save: function(data) {
-        var method = this.$exists() ? 'PATCH' : 'POST';
-        return $request(this, this.$model(), method, deepExtend(this, data ? copy(data) : {}));
+        var method = this.$exists() ? 'PATCH' : 'POST',
+            requestData = data ? deepExtend(this, copy(data)) : this.$modified();
+
+        return $request(this, this.$model(), method, requestData);
       },
       $delete: function() {
         return $request(this, this.$model(), 'DELETE');
@@ -148,10 +154,29 @@ angular.module('ur.model', []).provider('model', function() {
         return $request(this, this.$model(), 'GET');
       },
       $revert: function() {
-        // @todo Reset to previously loaded state
+        for (var prop in this.$original) {
+          this[prop] = this.$original[prop];
+        }
       },
       $exists: function() {
         return !!expr(this, this.$model().$config().identity).get();
+      },
+      $dirty: function() {
+        return !this.$pristine();
+      },
+      $pristine: function() {
+        return equals(this, this.$original);
+      },
+      $modified: function() {
+        var diff = {};
+
+        for (var prop in this.$original) {
+          if (this[prop] !== this.$original[prop]) {
+            diff[prop] = this[prop];
+          }
+        }
+
+        return diff;
       }
     },
 
@@ -272,6 +297,7 @@ angular.module('ur.model', []).provider('model', function() {
       },
       instance: function(data) {
         options.$instance = inherit(new ModelInstance(this), options.$instance);
+        options.$instance.$original = data || {};
         return inherit(options.$instance, data || {});
       },
       collection: function(data, boxElements) {
