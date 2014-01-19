@@ -142,8 +142,15 @@ angular.module('ur.model', []).provider('model', function() {
     $instance: {
       $original: {},
       $save: function(data) {
-        var method = this.$exists() ? 'PATCH' : 'POST',
-            requestData = data ? deepExtend(this, copy(data)) : this.$modified();
+        var method, requestData;
+
+        if (this.$exists()) {
+          method = 'PATCH';
+          requestData = data ? copy(data) : this.$modified();
+        } else {
+          method = 'POST';
+          requestData = deepExtend(this, data ? copy(data) : {});
+        }
 
         return $request(this, this.$model(), method, requestData);
       },

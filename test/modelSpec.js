@@ -131,7 +131,7 @@ describe("model", function() {
         archived: false
       }, update = angular.extend({}, doc, { archived: true });
 
-      $httpBackend.expectPATCH(url, JSON.stringify(update)).respond(200, JSON.stringify(update));
+      $httpBackend.expectPATCH(url, JSON.stringify({ archived: true })).respond(200, JSON.stringify(update));
 
       var existingProject = model("Projects").instance(angular.extend({ $links: { self: url } }, doc));
 
@@ -427,6 +427,21 @@ describe("model", function() {
           role: "Intern"
         });
       });
+
+      it('should ignore dirty fields when saving a new instance', inject(function(model) {
+        var admin = model('Users').create({
+			username: "Mr Admin",
+			role: "Admin"
+		});
+
+		admin.$save();
+
+		$httpBackend.expectPOST('http://api/users', {
+			username: "Mr Admin",
+			role: "Admin"
+		}).respond(200);
+		$httpBackend.flush();
+      }));
     });
   });
 });
