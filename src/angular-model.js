@@ -67,7 +67,7 @@ angular.module('ur.model', []).provider('model', function() {
     }
     if (data && JSON.stringify(data).length > 3) {
       var updated = extend(object, data);
-      extend(updated.$original, data);
+      copy(data, object.$original);
       return updated;
     }
     return object;
@@ -162,7 +162,7 @@ angular.module('ur.model', []).provider('model', function() {
       },
       $revert: function() {
         for (var prop in this.$original) {
-          this[prop] = this.$original[prop];
+          this[prop] = copy(this.$original[prop]);
         }
       },
       $exists: function() {

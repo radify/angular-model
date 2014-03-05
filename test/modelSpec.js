@@ -316,11 +316,11 @@ describe("model", function() {
             _id: 100,
             name: "Some Person",
             role: "User",
-			telephone: {
-				home: '1234',
-				office: '5678'
-			}
-		});
+            telephone: {
+              home: '1234',
+              office: '5678'
+            }
+        });
       }));
 
       it('should tell if a value has changed', function() {
@@ -333,7 +333,7 @@ describe("model", function() {
         expect(user.$pristine()).toBe(false);
       });
 
-      it('should tell if a nested value has changed', function() {
+      it('should tell if a nested object has changed', function() {
         expect(user.$dirty()).toBe(false);
         expect(user.$pristine()).toBe(true);
 
@@ -345,13 +345,13 @@ describe("model", function() {
 
       it('should revert to original state', function() {
         user.name = "Some other person";
-		user.telephone.office = "91011";
+        user.telephone.office = "91011";
 
         user.$revert();
 
         expect(user.$dirty()).toBe(false);
 
-		var reverted = angular.extend({}, user, {
+        var reverted = angular.extend({}, user, {
           _id: 100,
           name: "Some Person",
           role: "User",
@@ -362,6 +362,7 @@ describe("model", function() {
         });
 
         expect(angular.equals(reverted, user)).toBe(true);
+        expect(user.$original.telephone).not.toBe(user.telephone);
       });
 
       it('should return modified fields', function() {
@@ -406,40 +407,58 @@ describe("model", function() {
       it('should update original state on successful save', function() {
         angular.extend(user, {
           name: "Newman",
-          role: "Intern"
+          role: "Intern",
+          telephone: {
+            home: "0123"
+          }
         });
 
         user.$save();
 
         $httpBackend.expectPATCH('http://api/users/100', {
           name: "Newman",
-          role: "Intern"
+          role: "Intern",
+          telephone: {
+            home: "0123"
+          }
         }).respond(200, {
           $links: {
             self: "http://api/users/100"
           },
           _id: 100,
           name: "Newman",
-          role: "Intern"
+          role: "Intern",
+          telephone: {
+            home: "0123",
+            office: "5678"
+          }
         });
         $httpBackend.flush();
 
         expect(user.$pristine()).toBe(true);
         expect(user.$dirty()).toBe(false);
         expect(user.$modified()).toEqual({});
+
+        expect(user.$original.telephone).not.toBe(user.telephone);
       });
 
       it('should preserve modified state on failed save', function() {
         angular.extend(user, {
           name: "Newman",
-          role: "Intern"
+          role: "Intern",
+          telephone: {
+            home: "0123"
+          }
         });
 
         user.$save();
 
         $httpBackend.expectPATCH('http://api/users/100', {
           name: "Newman",
-          role: "Intern"
+          role: "Intern",
+          telephone: {
+            home: "0123"
+          }
         }).respond(500);
         $httpBackend.flush();
 
@@ -447,7 +466,10 @@ describe("model", function() {
         expect(user.$dirty()).toBe(true);
         expect(user.$modified()).toEqual({
           name: "Newman",
-          role: "Intern"
+          role: "Intern",
+          telephone: {
+            home: "0123"
+          }
         });
       });
 
