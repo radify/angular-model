@@ -178,7 +178,7 @@ angular.module('ur.model', []).provider('model', function() {
         var diff = {};
 
         for (var prop in this.$original) {
-          if (this[prop] !== this.$original[prop]) {
+          if (!equals(this[prop], this.$original[prop])) {
             diff[prop] = this[prop];
           }
         }
@@ -304,7 +304,7 @@ angular.module('ur.model', []).provider('model', function() {
       },
       instance: function(data) {
         options.$instance = inherit(new ModelInstance(this), options.$instance);
-        options.$instance.$original = data || {};
+        options.$instance.$original = copy(data) || {};
         return inherit(options.$instance, data || {});
       },
       collection: function(data, boxElements) {

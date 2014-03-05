@@ -309,25 +309,21 @@ describe("model", function() {
       var user;
 
       beforeEach(inject(function(model) {
-        model('Users').first().then(function(response) {
-          user = response;
-        });
-
-        $httpBackend.expectGET('http://api/users').respond(200, [
-          {
+        user = model('Users').instance({
             $links: {
               self: "http://api/users/100"
             },
             _id: 100,
             name: "Some Person",
-            role: "User"
-          }
-        ]);
-
-        $httpBackend.flush();
+            role: "User",
+			telephone: {
+				home: '1234',
+				office: '5678'
+			}
+		});
       }));
 
-      it('should tell if an instance has changed', function() {
+      it('should tell if a value has changed', function() {
         expect(user.$dirty()).toBe(false);
         expect(user.$pristine()).toBe(true);
 
@@ -337,45 +333,72 @@ describe("model", function() {
         expect(user.$pristine()).toBe(false);
       });
 
+      it('should tell if a nested value has changed', function() {
+        expect(user.$dirty()).toBe(false);
+        expect(user.$pristine()).toBe(true);
+
+        user.telephone.office = "91011";
+
+        expect(user.$dirty()).toBe(true);
+        expect(user.$pristine()).toBe(false);
+      });
+
       it('should revert to original state', function() {
         user.name = "Some other person";
+		user.telephone.office = "91011";
 
         user.$revert();
 
         expect(user.$dirty()).toBe(false);
 
-        var equals = angular.equals(user, {
+		var reverted = angular.extend({}, user, {
           _id: 100,
           name: "Some Person",
-          role: "User"
+          role: "User",
+          telephone: {
+            home: "1234",
+            office: "5678"
+          }
         });
 
-        expect(equals).toBe(true);
+        expect(angular.equals(reverted, user)).toBe(true);
       });
 
       it('should return modified fields', function() {
         angular.extend(user, {
           name: "New name",
-          role: "Admin"
+          role: "Admin",
+          telephone: {
+            office: "91011"
+          }
         });
 
         expect(user.$modified()).toEqual({
           name: "New name",
-          role: "Admin"
+          role: "Admin",
+          telephone: {
+            office: "91011"
+          }
         });
       });
 
       it('should only PATCH modified fields', function() {
         angular.extend(user, {
           name: "Newman",
-          role: "Intern"
+          role: "Intern",
+          telephone: {
+            home: "0123"
+          }
         });
 
         user.$save();
 
         $httpBackend.expectPATCH('http://api/users/100', {
           name: "Newman",
-          role: "Intern"
+          role: "Intern",
+          telephone: {
+            home: "0123"
+          }
         }).respond(200);
         $httpBackend.flush();
       });
@@ -406,7 +429,7 @@ describe("model", function() {
         expect(user.$modified()).toEqual({});
       });
 
-      it('should preserve original state on failed save', function() {
+      it('should preserve modified state on failed save', function() {
         angular.extend(user, {
           name: "Newman",
           role: "Intern"
@@ -430,17 +453,17 @@ describe("model", function() {
 
       it('should ignore dirty fields when saving a new instance', inject(function(model) {
         var admin = model('Users').create({
-			username: "Mr Admin",
-			role: "Admin"
-		});
+          username: "Mr Admin",
+          role: "Admin"
+        });
 
-		admin.$save();
+        admin.$save();
 
-		$httpBackend.expectPOST('http://api/users', {
-			username: "Mr Admin",
-			role: "Admin"
-		}).respond(200);
-		$httpBackend.flush();
+        $httpBackend.expectPOST('http://api/users', {
+          username: "Mr Admin",
+          role: "Admin"
+        }).respond(200);
+        $httpBackend.flush();
       }));
     });
   });
