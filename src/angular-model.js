@@ -125,14 +125,14 @@ angular.module('ur.model', []).provider('model', function() {
       create: function(data) {
         return this.instance(deepExtend(copy(this.$config().defaults), data || {}));
       },
-  
+
       // @todo Get methods for related objects
       $related: function(object) {
         if (!object.$links) return [];
-  
+
         forEach(object.$links, function(url, name) {
           object.prototype[name] = function() {
-            
+
           };
         });
       }
