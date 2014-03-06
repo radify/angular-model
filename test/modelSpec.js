@@ -333,6 +333,16 @@ describe("model", function() {
         expect(user.$pristine()).toBe(false);
       });
 
+      it('should tell if a value is added', function() {
+        expect(user.$dirty()).toBe(false);
+        expect(user.$pristine()).toBe(true);
+
+        user.email = "test@test.com";
+
+        expect(user.$dirty()).toBe(true);
+        expect(user.$pristine()).toBe(false);
+      });
+
       it('should tell if a nested object has changed', function() {
         expect(user.$dirty()).toBe(false);
         expect(user.$pristine()).toBe(true);
@@ -365,13 +375,14 @@ describe("model", function() {
         expect(user.$original.telephone).not.toBe(user.telephone);
       });
 
-      it('should return modified fields', function() {
+      it('should return new and modified fields', function() {
         angular.extend(user, {
           name: "New name",
           role: "Admin",
           telephone: {
             office: "91011"
-          }
+          },
+          email: "test@test.com"
         });
 
         expect(user.$modified()).toEqual({
@@ -379,17 +390,19 @@ describe("model", function() {
           role: "Admin",
           telephone: {
             office: "91011"
-          }
+          },
+          email: "test@test.com"
         });
       });
 
-      it('should only PATCH modified fields', function() {
+      it('should only PATCH new and modified fields', function() {
         angular.extend(user, {
           name: "Newman",
           role: "Intern",
           telephone: {
             home: "0123"
-          }
+          },
+          email: "test@test.com"
         });
 
         user.$save();
@@ -399,7 +412,8 @@ describe("model", function() {
           role: "Intern",
           telephone: {
             home: "0123"
-          }
+          },
+          email: "test@test.com"
         }).respond(200);
         $httpBackend.flush();
       });
@@ -410,6 +424,9 @@ describe("model", function() {
           role: "Intern",
           telephone: {
             home: "0123"
+          },
+          newObj: {
+            foo: 'bar'
           }
         });
 
@@ -420,6 +437,9 @@ describe("model", function() {
           role: "Intern",
           telephone: {
             home: "0123"
+          },
+          newObj: {
+            foo: 'bar'
           }
         }).respond(200, {
           $links: {
@@ -431,6 +451,9 @@ describe("model", function() {
           telephone: {
             home: "0123",
             office: "5678"
+          },
+          newObj: {
+            foo: 'bar'
           }
         });
         $httpBackend.flush();
@@ -440,6 +463,7 @@ describe("model", function() {
         expect(user.$modified()).toEqual({});
 
         expect(user.$original.telephone).not.toBe(user.telephone);
+        expect(user.$original.newObj).not.toBe(user.newObj);
       });
 
       it('should preserve modified state on failed save', function() {

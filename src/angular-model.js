@@ -183,7 +183,11 @@ angular.module('ur.model', []).provider('model', function() {
       $modified: function() {
         var original = this.$original(), diff = {};
 
-        for (var prop in original) {
+        for (var prop in this) {
+          if (isFunc(this[prop])) {
+            continue;
+          }
+
           if (!equals(this[prop], original[prop])) {
             diff[prop] = this[prop];
           }
