@@ -66,9 +66,8 @@ angular.module('ur.model', []).provider('model', function() {
       return model.collection(data, true);
     }
     if (data && JSON.stringify(data).length > 3) {
-      var updated = extend(object, data);
-      copy(data, object.$original);
-      return updated;
+      deepExtend(object, data);
+      object.$original(deepExtend(object.$original(), data));
     }
     return object;
   }
@@ -140,7 +139,6 @@ angular.module('ur.model', []).provider('model', function() {
 
     // Methods available on model instances
     $instance: {
-      $original: {},
       $save: function(data) {
         var method, requestData;
 
@@ -161,8 +159,10 @@ angular.module('ur.model', []).provider('model', function() {
         return $request(this, this.$model(), 'GET');
       },
       $revert: function() {
-        for (var prop in this.$original) {
-          this[prop] = copy(this.$original[prop]);
+        var original = this.$original();
+
+        for (var prop in original) {
+          this[prop] = copy(original[prop]);
         }
       },
       $exists: function() {
@@ -172,13 +172,13 @@ angular.module('ur.model', []).provider('model', function() {
         return !this.$pristine();
       },
       $pristine: function() {
-        return equals(this, this.$original);
+        return equals(this, this.$original());
       },
       $modified: function() {
-        var diff = {};
+        var original = this.$original(), diff = {};
 
-        for (var prop in this.$original) {
-          if (!equals(this[prop], this.$original[prop])) {
+        for (var prop in original) {
+          if (!equals(this[prop], original[prop])) {
             diff[prop] = this[prop];
           }
         }
@@ -303,8 +303,7 @@ angular.module('ur.model', []).provider('model', function() {
         return options.url;
       },
       instance: function(data) {
-        options.$instance = inherit(new ModelInstance(this), options.$instance);
-        options.$instance.$original = copy(data) || {};
+        options.$instance = inherit(new ModelInstance(this, copy(data) || {}), options.$instance);
         return inherit(options.$instance, data || {});
       },
       collection: function(data, boxElements) {
@@ -324,8 +323,12 @@ angular.module('ur.model', []).provider('model', function() {
     extend(this, scopedClassMethods, options.$class);
   }
 
-  function ModelInstance(owner) {
+  function ModelInstance(owner, original) {
     this.$model = function() { return owner; };
+    this.$original = function(newVal) {
+      if (newVal === undefined) return original;
+      original = newVal;
+    };
   }
 
 }).directive('link', ['model', function(model) {
