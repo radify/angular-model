@@ -15,18 +15,15 @@ function deepExtend(dst, source) {
   for (var prop in source) {
     if (source[prop] && source[prop].constructor && source[prop].constructor === Object) {
       dst[prop] = dst[prop] || {};
-      deepExtend(dst[prop], source[prop]);
-      continue;
+
+      if (dst[prop].constructor && dst[prop].constructor === Object) {
+        deepExtend(dst[prop], source[prop]);
+        continue;
+      }
     }
     dst[prop] = source[prop];
   }
   return dst;
-}
-
-function typeOf(val) {
-  if (isArray(val)) return "array";
-  if (isFunc(val)) return "function";
-  return typeof val;
 }
 
 function isEmpty(obj) {

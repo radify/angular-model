@@ -6,6 +6,14 @@ describe("model", function() {
     provider = modelProvider;
   }));
 
+  beforeEach(function() {
+    this.addMatchers({
+      toEqualData: function(expected) {
+        return angular.equals(this.actual, expected);
+      }
+    });
+  })
+
   describe("provider", function() {
 
     describe("configuration", function() {
@@ -66,6 +74,8 @@ describe("model", function() {
         url: "http://api/projects"
       }).model("Tasks", {
         url: "http://api/tasks"
+      }).model("Messages", {
+        url: "http://api/messages"
       });
     }));
 
@@ -88,10 +98,10 @@ describe("model", function() {
 
     it("should create objects with configured default values", inject(function(model) {
       var newProject = model("Projects").create();
-      expect(JSON.stringify(newProject)).toEqual('{"name":"New Project","$links":{}}');
+      expect(newProject).toEqualData({ name: "New Project", $links: {} });
 
       var newUser = model("Users").create();
-      expect(JSON.stringify(newUser)).toBe('{"username":"anon"}');
+      expect(newUser).toEqualData({ username: "anon" });
     }));
 
     it("should invoke instance methods with the correct binding", inject(function(model) {
@@ -508,8 +518,36 @@ describe("model", function() {
         $httpBackend.expectPOST('http://api/users', {
           username: "Mr Admin",
           role: "Admin"
-        }).respond(200);
+        }).respond(100);
         $httpBackend.flush();
+      }));
+    });
+
+    describe("syncing", function() {
+      it("should correctly update local copy on successful save", inject(function(model) {
+        var message = model('Messages').create({
+          from: "http://api/users/13",
+          content: "Hello!"
+        });
+
+        message.$save();
+
+        $httpBackend.expectPOST('http://api/messages', {
+          from: "http://api/users/13",
+          content: "Hello!"
+        }).respond(201, {
+          content: "Hello!",
+          from: {
+            name: "Bob",
+            $links: { self: "http://api/users/13" }
+          }
+        });
+        $httpBackend.flush();
+
+        expect(message.from).toEqualData({
+          name: "Bob",
+          $links: { self: "http://api/users/13" }
+        });
       }));
     });
   });
