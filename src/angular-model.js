@@ -23,6 +23,12 @@ function deepExtend(dst, source) {
   return dst;
 }
 
+function typeOf(val) {
+  if (isArray(val)) return "array";
+  if (isFunc(val)) return "function";
+  return typeof val;
+}
+
 function isEmpty(obj) {
   var name;
   for (name in obj) return false;
