@@ -3,16 +3,20 @@
   "description": "Simple HATEOS-oriented persistence module for AngularJS.",
   "version": "0.3.0",
   "license": "BSD-3-Clause",
-  "maintainers": [{
-    "name": "Nate Abele",
-    "email": "nate@unionofrad.com",
-    "web": "http://unionofrad.com"
-  }],
-  "contributors": [{
-    "name": "Warren Seymour",
-    "email": "warren@unionofrad.com",
-    "web": "http://unionofrad.com"
-  }],
+  "maintainers": [
+    {
+      "name": "Nate Abele",
+      "email": "nate@unionofrad.com",
+      "web": "http://unionofrad.com"
+    }
+  ],
+  "contributors": [
+    {
+      "name": "Warren Seymour",
+      "email": "warren@unionofrad.com",
+      "web": "http://unionofrad.com"
+    }
+  ],
   "repository": {
     "type": "git",
     "url": "git@github.com/uor/angular-model.git"
@@ -20,11 +24,11 @@
   "bugs": {
     "url": "https://github.com/uor/angular-model/issues"
   },
-  "depdendencies": {},
   "devDependencies": {
-    "karma": "0.11.14",
-    "karma-jasmine": "0.2.1",
-    "karma-script-launcher": "0.1.0",
-    "karma-phantomjs-launcher": "0.1.2"
-  }
+    "karma": "~0.11.14",
+    "karma-jasmine": "~0.2.1",
+    "karma-script-launcher": "~0.1.0",
+    "karma-phantomjs-launcher": "~0.1.2"
+  },
+  "dependencies": {}
 }
