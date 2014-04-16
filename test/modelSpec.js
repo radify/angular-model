@@ -386,7 +386,7 @@ describe("model", function() {
         });
 
         expect(angular.equals(reverted, user)).toBe(true);
-        expect(user.$original.telephone).not.toBe(user.telephone);
+        expect(user.$original().telephone).not.toBe(user.telephone);
       });
 
       it('should return new and modified fields', function() {
@@ -470,14 +470,15 @@ describe("model", function() {
             foo: 'bar'
           }
         });
+
         $httpBackend.flush();
 
         expect(user.$pristine()).toBe(true);
         expect(user.$dirty()).toBe(false);
         expect(user.$modified()).toEqual({});
 
-        expect(user.$original.telephone).not.toBe(user.telephone);
-        expect(user.$original.newObj).not.toBe(user.newObj);
+        expect(user.$original().newObj).not.toBe(user.newObj);
+        expect(user.$original().telephone).not.toBe(user.telephone);
       });
 
       it('should preserve modified state on failed save', function() {
@@ -498,6 +499,7 @@ describe("model", function() {
             home: "0123"
           }
         }).respond(500);
+
         $httpBackend.flush();
 
         expect(user.$pristine()).toBe(false);

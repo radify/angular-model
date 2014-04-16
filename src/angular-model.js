@@ -70,7 +70,7 @@ angular.module('ur.model', []).provider('model', function() {
     }
     if (data && JSON.stringify(data).length > 3) {
       deepExtend(object, data);
-      object.$original(deepExtend(object.$original(), data));
+      object.$original.sync();
     }
     return object;
   }
@@ -331,11 +331,12 @@ angular.module('ur.model', []).provider('model', function() {
   }
 
   function ModelInstance(owner, original) {
+    var self = this;
     this.$model = function() { return owner; };
-    this.$original = function(newVal) {
-      if (newVal === undefined) return original;
-      original = newVal;
-    };
+    this.$original = function() { return original; };
+    this.$original.sync = function() {
+      original = deepExtend(original, copy(self));
+    }
   }
 
 }).directive('link', ['model', function(model) {
