@@ -5,6 +5,12 @@ module.exports = function(config) {
     files: ['lib/*.js', 'src/*.js', 'test/*Spec.js'],
     exclude: [],
     singleRun: true,
-    browsers: ['PhantomJS']
+    browsers: ['PhantomJS'],
+    reporters: ['progress', 'coverage', 'coveralls'],
+    preprocessors: { 'src/*.js': ['coverage'] },
+    coverageReporter: {
+      type: "lcovonly",
+      dir: "coverage/"
+    }
   });
 };
