@@ -527,6 +527,46 @@ describe("model", function() {
         }).respond(100);
         $httpBackend.flush();
       }));
+
+      it('should push updates to arrays', inject(function(model) {
+        var list = model('Tasks').create({ things: [] });
+
+        list.$save();
+
+        $httpBackend.expectPOST('http://api/tasks', {
+          things: [],
+        }).respond(201, {
+          things: [],
+          $links: { self: "http://api/tasks/1138" }
+        });
+
+        $httpBackend.flush();
+
+        list.things = ['foo', 'bar'];
+        list.$save();
+
+        $httpBackend.expectPATCH('http://api/tasks/1138', {
+          things: ['foo', 'bar'],
+        }).respond(200);
+
+        $httpBackend.flush();
+
+        expect(list.things).toEqualData(['foo', 'bar']);
+        expect(list.$pristine()).toBe(true);
+
+        list.things.pop();
+        expect(list.$pristine()).toBe(false);
+        list.$save();
+
+        $httpBackend.expectPATCH('http://api/tasks/1138', {
+          things: ['foo'],
+        }).respond(200);
+
+        $httpBackend.flush();
+
+        expect(list.things).toEqualData(['foo']);
+        expect(list.$pristine()).toBe(true);
+      }));
     });
 
     describe("syncing", function() {
