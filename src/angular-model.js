@@ -70,7 +70,7 @@ angular.module('ur.model', []).provider('model', function() {
     }
     if (data && JSON.stringify(data).length > 3) {
       deepExtend(object, data);
-      object.$original.sync();
+      object.$original.sync(data);
     }
     return object;
   }
@@ -334,8 +334,8 @@ angular.module('ur.model', []).provider('model', function() {
     var self = this;
     this.$model = function() { return owner; };
     this.$original = function() { return original; };
-    this.$original.sync = function() {
-      original = deepExtend(original, copy(self));
+    this.$original.sync = function(data) {
+      original = deepExtend(original, data);
     }
   }
 
