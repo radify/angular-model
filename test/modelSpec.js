@@ -534,7 +534,7 @@ describe("model", function() {
         list.$save();
 
         $httpBackend.expectPOST('http://api/tasks', {
-          things: [],
+          things: []
         }).respond(201, {
           things: [],
           $links: { self: "http://api/tasks/1138" }
@@ -546,8 +546,10 @@ describe("model", function() {
         list.$save();
 
         $httpBackend.expectPATCH('http://api/tasks/1138', {
-          things: ['foo', 'bar'],
-        }).respond(200);
+          things: ['foo', 'bar']
+        }).respond(200, {
+          things: ['foo', 'bar']
+        });
 
         $httpBackend.flush();
 
@@ -559,8 +561,10 @@ describe("model", function() {
         list.$save();
 
         $httpBackend.expectPATCH('http://api/tasks/1138', {
-          things: ['foo'],
-        }).respond(200);
+          things: ['foo']
+        }).respond(200, {
+          things: ['foo']
+        });
 
         $httpBackend.flush();
 
