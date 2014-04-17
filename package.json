@@ -27,6 +27,7 @@
   "devDependencies": {
     "karma": "~0.11.14",
     "karma-jasmine": "~0.2.1",
+    "karma-coveralls": "~0.1.x",
     "karma-script-launcher": "~0.1.0",
     "karma-phantomjs-launcher": "~0.1.2"
   },
