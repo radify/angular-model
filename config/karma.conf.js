@@ -11,6 +11,9 @@ module.exports = function(config) {
     coverageReporter: {
       type: "lcovonly",
       dir: "coverage/"
+    },
+    coverallsReporter: {
+      repoToken: "wJub3kYtybW9CExyDHDd5Yhk7ZGhVsEBZ"
     }
   });
 };
