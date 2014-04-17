@@ -11,15 +11,34 @@ var noop   = angular.noop,
   isUndef  = angular.isUndefined,
   equals   = angular.equals;
 
+
+function lisObject(thing) {
+  return thing.constructor && thing.constructor === Object;
+}
+
 function deepExtend(dst, source) {
   for (var prop in source) {
-    if (source[prop] && source[prop].constructor && source[prop].constructor === Object) {
+    if (source[prop] && lisObject(source[prop])) {
       dst[prop] = dst[prop] || {};
 
-      if (dst[prop].constructor && dst[prop].constructor === Object) {
+      if (lisObject(dst[prop])) {
         deepExtend(dst[prop], source[prop]);
         continue;
       }
+    }
+    else if(isArray(source[prop])) {
+      dst[prop] = [];
+      for (var i = 0; i < source[prop].length; i++) {
+        var item = source[prop][i];
+        if (lisObject(item)) {
+          dst[prop].push(deepExtend({}, item));
+        } else if(isArray(item)) {
+          dst[prop].push(deepExtend([], item));
+        } else {
+          dst[prop].push(source[prop][i]);
+        }
+      }
+      continue;
     }
     dst[prop] = source[prop];
   }
