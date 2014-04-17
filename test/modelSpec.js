@@ -571,6 +571,17 @@ describe("model", function() {
         expect(list.things).toEqualData(['foo']);
         expect(list.$pristine()).toBe(true);
       }));
+
+      it('should not choke on null values in arrays', inject(function(model) {
+        var data = { foo: 'bar' };
+
+        model('Tasks').create(data).$save();
+
+        $httpBackend.expectPOST('http://api/tasks', data).respond(200, angular.extend(
+          { baz: ['gooby', null] }, data
+        ));
+        $httpBackend.flush();
+      }));
     });
 
     describe("syncing", function() {
