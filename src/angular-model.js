@@ -13,7 +13,7 @@ var noop   = angular.noop,
 
 
 function lisObject(thing) {
-  return thing.constructor && thing.constructor === Object;
+  return thing && thing.constructor && thing.constructor === Object;
 }
 
 function deepExtend(dst, source) {
