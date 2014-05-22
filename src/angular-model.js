@@ -172,6 +172,10 @@ angular.module('ur.model', []).provider('model', function() {
           requestData = deepExtend(this, data ? copy(data) : {});
         }
 
+        if (equals({}, requestData)) {
+          return q.when(this);
+        }
+
         return $request(this, this.$model(), method, requestData);
       },
       $delete: function() {
@@ -355,7 +359,7 @@ angular.module('ur.model', []).provider('model', function() {
     this.$original = function() { return original; };
     this.$original.sync = function(data) {
       original = deepExtend(original, data);
-    }
+    };
   }
 
 }).directive('link', ['model', function(model) {
