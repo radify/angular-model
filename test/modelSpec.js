@@ -16,7 +16,7 @@ describe("model", function() {
         };
       }
     });
-  })
+  });
 
   describe("provider", function() {
 
@@ -300,7 +300,7 @@ describe("model", function() {
 
         user = model('Users').create({ $links: { self: id }});
 
-        user.$save().then(angular.noop, function(resp) {
+        user.$save({name: 'test'}).then(angular.noop, function(resp) {
           response = resp;
         });
         expect(user.$errors).toBeUndefined();
@@ -511,6 +511,14 @@ describe("model", function() {
             home: "0123"
           }
         });
+      });
+
+      it('should skip PATCH for an umodified instance and resolve immediately', function() {
+        user.$save().then(function(resp) {
+          expect(resp).toEqualData(user);
+        });
+
+        $httpBackend.verifyNoOutstandingRequest();
       });
 
       it('should ignore dirty fields when saving a new instance', inject(function(model) {
