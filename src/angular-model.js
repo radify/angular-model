@@ -110,6 +110,21 @@ angular.module('ur.model', []).provider('model', function() {
         return expr(object, model.$config().identity).get() || model.url();
       }
       throw new Error("Could not get URL for " + typeof object);
+    },
+
+    // Attempt to determine object identity using schema property
+    identify: function(object) {
+      var schema = expr(object, DEFAULTS.schema).get(), located;
+
+      forEach(registry, function(config) {
+        if (located || config.url() !== schema) {
+          return;
+        }
+
+        located = config;
+      });
+
+      return located;
     }
   };
 
@@ -124,6 +139,9 @@ angular.module('ur.model', []).provider('model', function() {
 
     // The name of the key to the URL that identifies the object
     identity: "$links.self",
+
+    // The name of the key that identifies the class
+    schema: "$links.schema",
 
     // The name of the key to assign an object map of errors
     errors: "$errors"
@@ -146,17 +164,6 @@ angular.module('ur.model', []).provider('model', function() {
       create: function(data) {
         return this.instance(deepExtend(copy(this.$config().defaults), data || {}));
       },
-
-      // @todo Get methods for related objects
-      $related: function(object) {
-        if (!object.$links) return [];
-
-        forEach(object.$links, function(url, name) {
-          object.prototype[name] = function() {
-
-          };
-        });
-      }
     },
 
     // Methods available on model instances
@@ -214,6 +221,23 @@ angular.module('ur.model', []).provider('model', function() {
         }
 
         return diff;
+      },
+      $related: function(name) {
+        if (!this.$links[name]) {
+          throw new Error("Relation `" + name + "` does not exist.");
+        }
+
+        var params = {
+          method: 'GET',
+          url: this.$links[name]
+        };
+
+        var self = this;
+
+        return http(params).then(function(response) {
+          var model = global.identify(response.data);
+          return autoBox(null, model, response.data);
+        });
       }
     },
 

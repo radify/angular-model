@@ -60,7 +60,12 @@ describe("model", function() {
     beforeEach(module(function() {
       provider.model("Users", {
         defaults: { username: "anon" },
-        url: "http://api/users"
+        url: "http://api/users",
+        $instance: {
+          isAdmin: function() {
+            return this.roles.indexOf('admin') > -1;
+          }
+        }
       }).model("Projects", {
         $instance: {
           poster: function() {
@@ -112,6 +117,60 @@ describe("model", function() {
       var Projects = model("Projects"), customVal = "/img/my-project.png";
       expect(Projects.create().poster()).toEqual("/img/placeholder/poster.gif");
       expect(Projects.create({ $links: { logo: customVal }}).poster()).toEqual(customVal);
+    }));
+
+    it("should load related instances by name", inject(function(model) {
+        var project = model("Projects").create({
+          $links: {
+            self: "http://api/projects/10",
+            owner: "http://api/users/1"
+          }
+        });
+
+        project.$related('owner');
+        $httpBackend.expectGET('http://api/users/1').respond({
+          $links: {
+            self: "http://api/users/1",
+            schema: "http://api/users"
+          }
+        });
+        $httpBackend.flush();
+    }));
+
+    it("should throw an error if relation does not exist", inject(function(model) {
+        var project = model("Projects").create({
+          $links: {
+            self: "http://api/projects/10",
+            owner: "http://api/users/1"
+          }
+        });
+
+        var fn = function() {
+          project.$related('foo');
+        };
+
+        expect(fn).toThrow(new Error("Relation `foo` does not exist."));
+        $httpBackend.verifyNoOutstandingRequest();
+    }));
+
+    it("should box relations according to schema", inject(function(model) {
+        var project = model("Projects").create({
+          $links: {
+            self: "http://api/projects/10",
+            owner: "http://api/users/1"
+          }
+        });
+
+        var owner = project.$related('owner').then(function(owner) {
+          expect(owner.isAdmin).toEqual(jasmine.any(Function));
+        });
+        $httpBackend.expectGET('http://api/users/1').respond({
+          $links: {
+            self: "http://api/users/1",
+            schema: "http://api/users"
+          }
+        });
+        $httpBackend.flush();
     }));
 
     it("should create new objects with a POST request", inject(function(model) {
