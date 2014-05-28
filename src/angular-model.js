@@ -232,8 +232,6 @@ angular.module('ur.model', []).provider('model', function() {
           url: this.$links[name]
         };
 
-        var self = this;
-
         return http(params).then(function(response) {
           var model = global.identify(response.data);
           return autoBox(null, model, response.data);
