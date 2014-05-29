@@ -122,17 +122,14 @@ describe("model", function() {
     it("should load related instances by name", inject(function(model) {
         var project = model("Projects").create({
           $links: {
-            self: "http://api/projects/10",
-            owner: "http://api/users/1"
+            self: { href: "http://api/projects/10" },
+            owner: { href: "http://api/users/1", name: "Users" }
           }
         });
 
         project.$related('owner');
         $httpBackend.expectGET('http://api/users/1').respond({
-          $links: {
-            self: "http://api/users/1",
-            schema: "http://api/users"
-          }
+          $links: { self: { href: "http://api/users/1" } }
         });
         $httpBackend.flush();
     }));
@@ -140,8 +137,8 @@ describe("model", function() {
     it("should throw an error if relation does not exist", inject(function(model) {
         var project = model("Projects").create({
           $links: {
-            self: "http://api/projects/10",
-            owner: "http://api/users/1"
+            self: { href: "http://api/projects/10" },
+            owner: { href: "http://api/users/1", name: "Users" }
           }
         });
 
@@ -153,11 +150,11 @@ describe("model", function() {
         $httpBackend.verifyNoOutstandingRequest();
     }));
 
-    it("should box relations according to schema", inject(function(model) {
+    it("should box relations according to name", inject(function(model) {
         var project = model("Projects").create({
           $links: {
-            self: "http://api/projects/10",
-            owner: "http://api/users/1"
+            self: { href: "http://api/projects/10" },
+            owner: { href: "http://api/users/1", name: "Users" }
           }
         });
 
@@ -165,10 +162,7 @@ describe("model", function() {
           expect(owner.isAdmin).toEqual(jasmine.any(Function));
         });
         $httpBackend.expectGET('http://api/users/1').respond({
-          $links: {
-            self: "http://api/users/1",
-            schema: "http://api/users"
-          }
+          $links: { self: { href: "http://api/users/1", name: "Users" } }
         });
         $httpBackend.flush();
     }));
@@ -180,7 +174,7 @@ describe("model", function() {
       })).respond(201, JSON.stringify({
         name: "My Project",
         archived: false,
-        $links: { self: "http://api/projects/1138" }
+        $links: { self: { href: "http://api/projects/1138", name: "Projects" } }
       }));
 
       var newProject = model("Projects").create({ name: "My Project" });
@@ -192,7 +186,7 @@ describe("model", function() {
       expect(newProject.archived).toBeUndefined();
 
       $httpBackend.flush();
-      expect(newProject.$links.self).toBe("http://api/projects/1138");
+      expect(newProject.$links.self.href).toBe("http://api/projects/1138");
       expect(newProject.archived).toBe(false);
       expect(newProject.verified).toBe(true);
     }));
@@ -206,7 +200,9 @@ describe("model", function() {
 
       $httpBackend.expectPATCH(url, JSON.stringify({ archived: true })).respond(200, JSON.stringify(update));
 
-      var existingProject = model("Projects").instance(angular.extend({ $links: { self: url } }, doc));
+      var existingProject = model("Projects").instance(angular.extend({
+        $links: { self: { href: url, } }
+      }, doc));
 
       existingProject.$save({ archived: true }).then(function(result) {
         expect(result).toBe(existingProject);
@@ -215,14 +211,14 @@ describe("model", function() {
       $httpBackend.flush();
 
       expect(existingProject.name).toBe("My Project");
-      expect(existingProject.$links.self).toBe("http://api/projects/1138");
+      expect(existingProject.$links.self.href).toEqual("http://api/projects/1138");
       expect(existingProject.archived).toBe(true);
     }));
 
     it("should return arrays boxed as collections", inject(function(model) {
       var data = [
-        { name: "First Project", $links: { self: "http://api/projects/1138" }},
-        { name: "Second Project", $links: { self: "http://api/projects/1139" }}
+        { name: "First Project", $links: { self: { href: "http://api/projects/1138" }}},
+        { name: "Second Project", $links: { self: { href: "http://api/projects/1139" }}}
       ];
       $httpBackend.expectGET("http://api/projects").respond(200, JSON.stringify(data));
 
@@ -307,8 +303,8 @@ describe("model", function() {
       describe("first()", function() {
         it("should return the first element of an array", inject(function(model) {
           var data = [
-            { name: "First Project", $links: { self: "http://api/projects/1138" }},
-            { name: "Second Project", $links: { self: "http://api/projects/1139" }}
+            { name: "First Project", $links: { self: { href: "http://api/projects/1138" }}},
+            { name: "Second Project", $links: { self: { href: "http://api/projects/1139" }}}
           ];
           $httpBackend.expectGET("http://api/projects").respond(200, JSON.stringify(data));
     
@@ -319,18 +315,18 @@ describe("model", function() {
         }));
 
         it("should return the full result of non-array responses", inject(function(model) {
-          var data = { name: "A Project", $links: { self: "http://api/projects/a" }};
+          var data = { name: "A Project", $links: { self: { href: "http://api/projects/a" }}};
           $httpBackend.expectGET("http://api/projects").respond(200, JSON.stringify(data));
     
           model("Projects").first().then(function(result) {
             expect(result.name).toBe("A Project");
-            expect(result.$links.self).toBe("http://api/projects/a");
+            expect(result.$links.self.href).toBe("http://api/projects/a");
           });
           $httpBackend.flush();
         }));
 
         it("should passthru query parameters", inject(function(model) {
-          var first, data = { name: "First Project", $links: { self: "http://api/projects/first" }};
+          var first, data = { name: "First Project", $links: { self: { href: "http://api/projects/first" }}};
           $httpBackend.expectGET("http://api/projects?first=true").respond(200, JSON.stringify(data));
 
           model("Projects").first({ first: true }).then(function(result) {
@@ -339,7 +335,7 @@ describe("model", function() {
           $httpBackend.flush();
 
           expect(first.name).toBe("First Project");
-          expect(first.$links.self).toBe("http://api/projects/first");
+          expect(first.$links.self.href).toBe("http://api/projects/first");
         }));
       });
     });
@@ -357,7 +353,7 @@ describe("model", function() {
 
         $httpBackend.expectPATCH(id).respond(422, JSON.stringify(errors));
 
-        user = model('Users').create({ $links: { self: id }});
+        user = model('Users').create({ $links: { self: { href: id }}});
 
         user.$save({name: 'test'}).then(angular.noop, function(resp) {
           response = resp;
@@ -383,9 +379,7 @@ describe("model", function() {
 
       beforeEach(inject(function(model) {
         user = model('Users').instance({
-            $links: {
-              self: "http://api/users/100"
-            },
+            $links: { self: { href: "http://api/users/100" } },
             _id: 100,
             name: "Some Person",
             role: "User",
@@ -516,7 +510,9 @@ describe("model", function() {
           }
         }).respond(200, {
           $links: {
-            self: "http://api/users/100"
+            self: {
+              href: "http://api/users/100"
+            }
           },
           _id: 100,
           name: "Newman",
@@ -604,7 +600,7 @@ describe("model", function() {
           things: []
         }).respond(201, {
           things: [],
-          $links: { self: "http://api/tasks/1138" }
+          $links: { self: { href: "http://api/tasks/1138" }}
         });
 
         $httpBackend.flush();
@@ -667,14 +663,14 @@ describe("model", function() {
           content: "Hello!",
           from: {
             name: "Bob",
-            $links: { self: "http://api/users/13" }
+            $links: { self: { href: "http://api/users/13" }}
           }
         });
         $httpBackend.flush();
 
         expect(message.from).toEqualData({
           name: "Bob",
-          $links: { self: "http://api/users/13" }
+          $links: { self: { href: "http://api/users/13" }}
         });
       }));
     });

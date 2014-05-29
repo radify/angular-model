@@ -107,25 +107,10 @@ angular.module('ur.model', []).provider('model', function() {
       }
       if (object instanceof ModelInstance || isFunc(object.$model)) {
         var model = object.$model();
-        return expr(object, model.$config().identity).get() || model.url();
+        return expr(object, model.$config().identity + '.href').get() || model.url();
       }
       throw new Error("Could not get URL for " + typeof object);
     },
-
-    // Attempt to determine object identity using schema property
-    identify: function(object) {
-      var schema = expr(object, DEFAULTS.schema).get(), located;
-
-      forEach(registry, function(config) {
-        if (located || config.url() !== schema) {
-          return;
-        }
-
-        located = config;
-      });
-
-      return located;
-    }
   };
 
   // Master registry of application model configurations
@@ -137,11 +122,8 @@ angular.module('ur.model', []).provider('model', function() {
     // Default values which should be applied when creating a new model instance
     defaults: {},
 
-    // The name of the key to the URL that identifies the object
+    // The name of the key that identifies the object
     identity: "$links.self",
-
-    // The name of the key that identifies the class
-    schema: "$links.schema",
 
     // The name of the key to assign an object map of errors
     errors: "$errors"
@@ -223,19 +205,22 @@ angular.module('ur.model', []).provider('model', function() {
         return diff;
       },
       $related: function(name) {
-        if (!this.$links[name]) {
+        var link, model, instance;
+
+        link = this.$links[name];
+        if (!link) {
           throw new Error("Relation `" + name + "` does not exist.");
         }
 
-        var params = {
-          method: 'GET',
-          url: this.$links[name]
-        };
+        model = registry[link.name];
+        if (!model) {
+          throw new Error("Relation `" + name + "` with model `" + link.name + "` is not defined.");
+        }
 
-        return http(params).then(function(response) {
-          var model = global.identify(response.data);
-          return autoBox(null, model, response.data);
-        });
+        instance = model.create();
+        expr(instance, model.$config().identity).set(link);
+
+        return instance.$reload();
       }
     },
 
