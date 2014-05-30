@@ -107,10 +107,10 @@ angular.module('ur.model', []).provider('model', function() {
       }
       if (object instanceof ModelInstance || isFunc(object.$model)) {
         var model = object.$model();
-        return expr(object, model.$config().identity).get() || model.url();
+        return expr(object, model.$config().identity + '.href').get() || model.url();
       }
       throw new Error("Could not get URL for " + typeof object);
-    }
+    },
   };
 
   // Master registry of application model configurations
@@ -122,7 +122,7 @@ angular.module('ur.model', []).provider('model', function() {
     // Default values which should be applied when creating a new model instance
     defaults: {},
 
-    // The name of the key to the URL that identifies the object
+    // The name of the key that identifies the object
     identity: "$links.self",
 
     // The name of the key to assign an object map of errors
@@ -146,17 +146,6 @@ angular.module('ur.model', []).provider('model', function() {
       create: function(data) {
         return this.instance(deepExtend(copy(this.$config().defaults), data || {}));
       },
-
-      // @todo Get methods for related objects
-      $related: function(object) {
-        if (!object.$links) return [];
-
-        forEach(object.$links, function(url, name) {
-          object.prototype[name] = function() {
-
-          };
-        });
-      }
     },
 
     // Methods available on model instances
@@ -214,6 +203,24 @@ angular.module('ur.model', []).provider('model', function() {
         }
 
         return diff;
+      },
+      $related: function(name) {
+        var link, model, instance;
+
+        link = this.$links[name];
+        if (!link) {
+          throw new Error("Relation `" + name + "` does not exist.");
+        }
+
+        model = registry[link.name];
+        if (!model) {
+          throw new Error("Relation `" + name + "` with model `" + link.name + "` is not defined.");
+        }
+
+        instance = model.create();
+        expr(instance, model.$config().identity).set(link);
+
+        return instance.$reload();
       }
     },
 
