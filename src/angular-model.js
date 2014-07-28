@@ -251,8 +251,16 @@ angular.module('ur.model', []).provider('model', function() {
       headers: headers
     };
 
-    if (!isWrite && isObject(data) && !isEmpty(data)) {
-      params.url += (params.url.indexOf('?') > -1 ? '&' : '?') + serialize(data);
+    if (!isWrite && !isEmpty(data)) {
+      if(isObject(data)) {
+        // index url: resources?<params>
+        params.url += (params.url.indexOf('?') > -1 ? '&' : '?') + serialize(data);
+      } else {
+        // view url: resources/<id>
+        var parts = params.url.split('?');
+        parts[1] = parts.length > 1 ? '?' + parts[1] : '';
+        params.url = parts[0] + '/' + data.toString() + parts[1];
+      }
     }
 
     return extend(deferred.promise, {

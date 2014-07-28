@@ -307,7 +307,7 @@ describe("model", function() {
             { name: "Second Project", $links: { self: { href: "http://api/projects/1139" }}}
           ];
           $httpBackend.expectGET("http://api/projects").respond(200, JSON.stringify(data));
-    
+
           model("Projects").first().then(function(result) {
             expect(result.name).toBe("First Project");
           });
@@ -317,7 +317,7 @@ describe("model", function() {
         it("should return the full result of non-array responses", inject(function(model) {
           var data = { name: "A Project", $links: { self: { href: "http://api/projects/a" }}};
           $httpBackend.expectGET("http://api/projects").respond(200, JSON.stringify(data));
-    
+
           model("Projects").first().then(function(result) {
             expect(result.name).toBe("A Project");
             expect(result.$links.self.href).toBe("http://api/projects/a");
@@ -336,6 +336,22 @@ describe("model", function() {
 
           expect(first.name).toBe("First Project");
           expect(first.$links.self.href).toBe("http://api/projects/first");
+        }));
+
+        it("should generate a view query if the parameter is not an object", inject(function(model) {
+          var abc;
+          $httpBackend.expectGET("http://api/projects/abc").respond(200, JSON.stringify({
+            name: "Abc Project",
+            $links: { self: { href : "http://api/projects/abc" } }
+          }));
+
+          model("Projects").first('abc').then(function(result) {
+            abc = result;
+          });
+          $httpBackend.flush();
+
+          expect(abc.name).toBe("Abc Project");
+          expect(abc.$links.self.href).toBe("http://api/projects/abc");
         }));
       });
     });
