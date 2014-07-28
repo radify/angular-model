@@ -119,6 +119,18 @@ describe("model", function() {
       expect(Projects.create({ $links: { logo: customVal }}).poster()).toEqual(customVal);
     }));
 
+    it("should determine if a relation exists", inject(function(model) {
+        var project = model("Projects").create({
+          $links: {
+            self: { href: "http://api/projects/10" },
+            owner: { href: "http://api/users/1", name: "Users" }
+          }
+        });
+
+        expect(project.$hasRelated('owner')).toBe(true);
+        expect(project.$hasRelated('watcher')).toBe(false);
+    }));
+
     it("should load related instances by name", inject(function(model) {
         var project = model("Projects").create({
           $links: {

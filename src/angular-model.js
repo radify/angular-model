@@ -207,11 +207,11 @@ angular.module('ur.model', []).provider('model', function() {
       $related: function(name) {
         var link, model, instance;
 
-        link = this.$links[name];
-        if (!link) {
+        if (!this.$hasRelated(name)) {
           throw new Error("Relation `" + name + "` does not exist.");
         }
 
+        link = this.$links[name];
         model = registry[link.name];
         if (!model) {
           throw new Error("Relation `" + name + "` with model `" + link.name + "` is not defined.");
@@ -221,6 +221,9 @@ angular.module('ur.model', []).provider('model', function() {
         expr(instance, model.$config().identity).set(link);
 
         return instance.$reload();
+      },
+      $hasRelated: function(name) {
+        return isObject(this.$links[name]);
       }
     },
 
