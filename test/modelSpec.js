@@ -242,6 +242,23 @@ describe("model", function() {
       $httpBackend.flush();
     }));
 
+    it("should attach and correctly bind custom collection methods", inject(function(model) {
+      provider.model("Objects", {
+        $collection: {
+          count: function() {
+            return this.length;
+          }
+        }
+      });
+
+      $httpBackend.expectGET("/objects").respond(200, JSON.stringify([{}, {}, {}, {}]));
+
+      model("Objects").all().then(function(collection) {
+        expect(collection.count()).toBe(4);
+      });
+      $httpBackend.flush();
+    }));
+
     it("should accept query parameters", inject(function(model) {
       var success, data = { success: true };
       $httpBackend.expectGET("http://api/projects?q=some%20search").respond(200, JSON.stringify(data));
