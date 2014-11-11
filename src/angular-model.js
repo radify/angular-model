@@ -1,3 +1,9 @@
+/**
+ * AngularJS API Domain Model Service
+ * @copyright 2014, Radify, Inc (http://radify.io/)
+ * @link https://github.com/uor/angular-auth-http#readme
+ * @license BSD
+ */
 (function(window, angular, undefined) {
 'use strict';
 
