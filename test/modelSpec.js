@@ -435,6 +435,7 @@ describe("model", function() {
       it('should revert to original state', function() {
         user.name = "Some other person";
         user.telephone.office = "91011";
+        user.newProp = "Some new property";
 
         user.$revert();
 
