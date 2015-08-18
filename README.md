@@ -1,4 +1,5 @@
 [ ![Travis Status for radify/angular-model](https://travis-ci.org/radify/angular-model.svg)](https://travis-ci.org/radify/angular-model)
+[ ![Dependencies Status](https://david-dm.org/radify/angular-model.svg)](https://david-dm.org/radify/angular-model.svg)
 
 # Angular Model
 
