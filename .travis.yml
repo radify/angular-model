@@ -12,4 +12,4 @@ before_script:
   - npm install
 
 script:
-  - script/test
+  - gulp
