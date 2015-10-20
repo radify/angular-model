@@ -1,0 +1,22 @@
+# This file is for unifying the coding style for different editors and IDEs.
+# More information at http://EditorConfig.org
+# The site includes a list of editors that support EditorConfig by
+# default and also lists plugins for editors that do not. 
+
+# root = true tells the text editor to honor the .editorconfig file
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+indent_size = 2
+indent_style = space
+# tab_width defaults to the value of indent_size
+trim_trailing_whitespace = true
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.php]
+indent_size = 4
