@@ -182,6 +182,7 @@ describe("model", function() {
     it("should create new objects with a POST request", inject(function(model) {
       $httpBackend.expectPOST('http://api/projects', JSON.stringify({
         name: "My Project",
+        $links: {},
         verified: true
       })).respond(201, JSON.stringify({
         name: "My Project",
@@ -336,7 +337,7 @@ describe("model", function() {
             { name: "Second Project", $links: { self: { href: "http://api/projects/1139" }}}
           ];
           $httpBackend.expectGET("http://api/projects").respond(200, JSON.stringify(data));
-    
+
           model("Projects").first().then(function(result) {
             expect(result.name).toBe("First Project");
           });
@@ -346,7 +347,7 @@ describe("model", function() {
         it("should return the full result of non-array responses", inject(function(model) {
           var data = { name: "A Project", $links: { self: { href: "http://api/projects/a" }}};
           $httpBackend.expectGET("http://api/projects").respond(200, JSON.stringify(data));
-    
+
           model("Projects").first().then(function(result) {
             expect(result.name).toBe("A Project");
             expect(result.$links.self.href).toBe("http://api/projects/a");
