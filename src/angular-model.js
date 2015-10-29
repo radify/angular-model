@@ -180,10 +180,14 @@ angular.module('ur.model', []).provider('model', function() {
         return $request(this, this.$model(), 'GET');
       },
       $revert: function() {
-        var original = this.$original();
+        var original = copy(this.$original());
 
-        for (var prop in original) {
-          this[prop] = copy(original[prop]);
+        for (var prop in this) {
+          if (isFunc(this[prop])) {
+            continue;
+          }
+
+          this[prop] = original[prop];
         }
       },
       $exists: function() {
