@@ -1,8 +1,10 @@
 /**
  * AngularJS API Domain Model Service
- * @copyright 2014, Radify, Inc (http://radify.io/)
- * @link https://github.com/uor/angular-auth-http#readme
- * @license BSD
+ *
+ * {@copyright 2015, Radify, Inc (http://radify.io/)}
+ * {@link https://github.com/radify/angular-model#readme}
+ *
+ * @license BSD-3-Clause
  */
 (function(window, angular, undefined) {
 'use strict';
@@ -17,7 +19,6 @@ var noop   = angular.noop,
   isUndef  = angular.isUndefined,
   equals   = angular.equals;
 
-
 function lisObject(thing) {
   return thing && thing.constructor && thing.constructor === Object;
 }
@@ -31,14 +32,13 @@ function deepExtend(dst, source) {
         deepExtend(dst[prop], source[prop]);
         continue;
       }
-    }
-    else if(isArray(source[prop])) {
+    } else if (isArray(source[prop])) {
       dst[prop] = [];
       for (var i = 0; i < source[prop].length; i++) {
         var item = source[prop][i];
         if (lisObject(item)) {
           dst[prop].push(deepExtend({}, item));
-        } else if(isArray(item)) {
+        } else if (isArray(item)) {
           dst[prop].push(deepExtend([], item));
         } else {
           dst[prop].push(source[prop][i]);
@@ -53,7 +53,7 @@ function deepExtend(dst, source) {
 
 function isEmpty(obj) {
   var name;
-  for (name in obj) return false;
+  for (name in obj) {return false;}
   return true;
 }
 
@@ -62,21 +62,22 @@ function inherit(parent, extra) {
 }
 
 function hyphenate(str) {
-  var toLower = function($1) { return "-" + $1.toLowerCase(); };
+  var toLower = function($1) { return '-' + $1.toLowerCase(); };
   return str.replace(/([A-Z])/g, toLower).replace(/^-+/, '');
 }
 
 function serialize(obj, prefix) {
   var str = [];
   var enc = encodeURIComponent;
+  var k, v;
 
   for (var p in obj) {
-    var k = prefix ? prefix + "[" + p + "]" : p, v = obj[p];
-    str.push(isObject(v) ? serialize(v, k) : enc(k) + "=" + enc(v));
+    k = prefix ? prefix + '[' + p + ']' : p;
+    v = obj[p];
+    str.push(isObject(v) ? serialize(v, k) : enc(k) + '=' + enc(v));
   }
-  return str.join("&");
+  return str.join('&');
 }
-
 
 angular.module('ur.model', []).provider('model', function() {
 
@@ -84,7 +85,7 @@ angular.module('ur.model', []).provider('model', function() {
       http, // Provider-level copy of $http service
       q;    // Provider-level copy of $q service
 
-  // "Box" an object value in a model instance if it is present.
+  // 'Box' an object value in a model instance if it is present.
   // Otherwise, return an empty model object.
   function autoBox(object, model, data) {
     if (!object) {
@@ -104,7 +105,7 @@ angular.module('ur.model', []).provider('model', function() {
   var global = {
 
     // Base URL prepended to generated URLs
-    base: "",
+    base: '',
 
     // Extract URL from object, or use default URL
     url: function(object) {
@@ -115,7 +116,7 @@ angular.module('ur.model', []).provider('model', function() {
         var model = object.$model();
         return expr(object, model.$config().identity + '.href').get() || model.url();
       }
-      throw new Error("Could not get URL for " + typeof object);
+      throw new Error('Could not get URL for ' + typeof object);
     },
   };
 
@@ -129,10 +130,10 @@ angular.module('ur.model', []).provider('model', function() {
     defaults: {},
 
     // The name of the key that identifies the object
-    identity: "$links.self",
+    identity: '$links.self',
 
     // The name of the key to assign an object map of errors
-    errors: "$errors"
+    errors: '$errors'
   };
 
   var DEFAULT_METHODS = {
@@ -218,13 +219,13 @@ angular.module('ur.model', []).provider('model', function() {
         var link, model, instance;
 
         if (!this.$hasRelated(name)) {
-          throw new Error("Relation `" + name + "` does not exist.");
+          throw new Error('Relation `' + name + '` does not exist.');
         }
 
         link = this.$links[name];
         model = registry[link.name];
         if (!model) {
-          throw new Error("Relation `" + name + "` with model `" + link.name + "` is not defined.");
+          throw new Error('Relation `' + name + '` with model `' + link.name + '` is not defined.');
         }
 
         instance = model.create();
@@ -253,7 +254,7 @@ angular.module('ur.model', []).provider('model', function() {
 
   function $request(object, model, method, data, headers) {
     var writeMethods = ['POST', 'PUT', 'PATCH'];
-    var defaultHeaders = { 'Content-Type': 'application/json;charset=UTF-8' };
+    var defaultHeaders = {'Content-Type': 'application/json;charset=UTF-8'};
     var isWrite = writeMethods.indexOf(method) > -1;
     headers = extend({}, isWrite ? defaultHeaders : {}, headers);
 
@@ -387,10 +388,10 @@ angular.module('ur.model', []).provider('model', function() {
   return {
     restrict: 'E',
     link: function(scope, element, attrs) {
-      if (attrs.rel !== "resource" || !attrs.href || !attrs.name) {
+      if (attrs.rel !== 'resource' || !attrs.href || !attrs.name) {
         return;
       }
-      model(attrs.name, { url: attrs.href, singleton: attrs.singleton ? true : false });
+      model(attrs.name, {url: attrs.href, singleton: attrs.singleton ? true : false});
     }
   };
 

@@ -1,36 +1,56 @@
 {
   "name": "angular-model",
   "description": "Simple HATEOS-oriented persistence module for AngularJS.",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "license": "BSD-3-Clause",
   "maintainers": [
     {
       "name": "Nate Abele",
-      "email": "nate@unionofrad.com",
-      "web": "http://unionofrad.com"
+      "email": "nate@radify.io",
+      "web": "http://radify.io"
     }
   ],
   "contributors": [
     {
       "name": "Warren Seymour",
-      "email": "warren@unionofrad.com",
-      "web": "http://unionofrad.com"
+      "email": "warren@radify.io",
+      "web": "http://radify.io"
+    },
+    {
+      "name": "John Mercer",
+      "email": "john@radify.io",
+      "web": "http://radify.io"
     }
   ],
   "repository": {
     "type": "git",
-    "url": "git@github.com/uor/angular-model.git"
+    "url": "git+https://github.com/radify/angular-model.git"
   },
   "bugs": {
-    "url": "https://github.com/uor/angular-model/issues"
+    "url": "https://github.com/radify/angular-model/issues"
   },
   "devDependencies": {
-    "karma": "~0.13.11",
-    "karma-jasmine": "~0.3.6",
-    "karma-coverage": "~0.5",
-    "karma-coveralls": "~1.1.x",
-    "karma-script-launcher": "~0.1.0",
-    "karma-phantomjs-launcher": "~0.2.1"
+    "gulp": "^3.9.0",
+    "gulp-coveralls": "^0.1.4",
+    "gulp-jscs": "^3.0.1",
+    "gulp-jshint": "^1.11.2",
+    "jasmine-core": "^2.3.4",
+    "karma": "^0.13.11",
+    "karma-coverage": "^0.5.2",
+    "karma-coveralls": "^1.1.2",
+    "karma-jasmine": "^0.3.6",
+    "karma-phantomjs-launcher": "^0.2.1",
+    "phantomjs": "^1.9.18",
+    "run-sequence": "^1.1.4"
   },
-  "dependencies": {}
+  "dependencies": {
+    "gulp-requiresafe": "^1.1.2"
+  },
+  "keywords": [
+    "angular",
+    "angularjs",
+    "HATEOS",
+    "hypermedia",
+    "architecture"
+  ]
 }

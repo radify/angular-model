@@ -1,0 +1,14 @@
+{
+  "maxerr"        : 50,
+  "camelcase"     : true,
+  "indent"        : 2,
+  "latedef"       : true,
+  "newcap"        : true,
+  "noempty"       : true,
+  "quotmark"      : "single",
+  "undef"         : true,
+  "strict"        : true,
+  "phantom"       : true,
+  "browser"       : true,
+  "globals"       : {}
+}

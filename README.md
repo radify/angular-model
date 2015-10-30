@@ -1,7 +1,8 @@
-[ ![Travis Status for radify/angular-model](https://travis-ci.org/radify/angular-model.svg)](https://travis-ci.org/radify/angular-model)
+[![Travis Status for radify/angular-model](https://travis-ci.org/radify/angular-model.svg)](https://travis-ci.org/radify/angular-model)
 [![Coverage Status](https://coveralls.io/repos/radify/angular-model/badge.svg?branch=master&service=github)](https://coveralls.io/github/radify/angular-model?branch=master)
-[ ![Dependency Status](https://david-dm.org/radify/angular-model.svg)](https://david-dm.org/radify/angular-model)
-[ ![devDependency Status](https://david-dm.org/radify/angular-model/dev-status.svg)](https://david-dm.org/radify/angular-model#info=devDependencies)
+[![Dependency Status](https://david-dm.org/radify/angular-model.svg)](https://david-dm.org/radify/angular-model)
+[![devDependency Status](https://david-dm.org/radify/angular-model/dev-status.svg)](https://david-dm.org/radify/angular-model#info=devDependencies)
+[![Code Climate](https://codeclimate.com/github/radify/angular-model/badges/gpa.svg)](https://codeclimate.com/github/radify/angular-model)
 
 # Angular Model
 
