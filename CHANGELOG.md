@@ -10,18 +10,23 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - jscs for code style
 - jshint for linting
 - dependency badges
+
 ### Changed
 - Gulp, rather than Karma, handles Coveralls reporting
+
 ### Fixed
 - Coveralls reporting and badge
+
 ### Security
 - Adds requireSafe security check to Gulp
+
 ### Updated
 - Updates package.json
 - Style updates in `angular-model.js`
 
 ## [0.4.1] - 2015-08-19
-* Adds a CHANGELOG
+### Added
+- CHANGELOG
 
 [Unreleased]: https://github.com/radify/angular-model/compare/v0.5.0...HEAD
 [0.5.0]: https://github.com/radify/angular-model/compare/v0.4.1...v0.5.0
