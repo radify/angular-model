@@ -15,5 +15,6 @@ script:
   - gulp
 
 addons:
-    code_climate:
-        repo_token: $CODECLIMATE_REPO_TOKEN
+  code_climate:
+    repo_token:
+      secure: "mTBue2hOpHjHgvgLqAkrQ56FMKAF+N2ux/Dt8uVaNHA3nSBJE8+M1TmKcWZtZQY4owZzOb5hNFOsyGfICjrJN462Y1gYewm5Vtful2LSbQa9wl7xFdQPce7CEmHJ47dVwOMf7vjxsatM6ThuM70ofo4rfpiusrJ4UbH2EafopbQ="
