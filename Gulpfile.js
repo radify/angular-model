@@ -50,5 +50,5 @@ gulp.task('security', function(cb) {
 });
 
 gulp.task('default', function(cb) {
-  runSequence('test', ['lint', 'style', 'coveralls', 'security'], cb);
+  runSequence('test', ['lint', 'style', 'coveralls'], cb);
 });
