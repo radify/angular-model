@@ -1,12 +1,12 @@
 'use strict';
 
-var gulp      = require('gulp');
-var Server    = require('karma').Server;
-var coveralls = require('gulp-coveralls');
-var jshint    = require('gulp-jshint');
-var jscs      = require('gulp-jscs');
+var gulp        = require('gulp');
+var Server      = require('karma').Server;
+var coveralls   = require('gulp-coveralls');
+var jshint      = require('gulp-jshint');
+var jscs        = require('gulp-jscs');
+var nsp         = require('gulp-nsp');
 var runSequence = require('run-sequence');
-var gulpRequireSafe = require('gulp-requiresafe');
 
 /*
  * PLEASE NOTE: run-sequence is a
@@ -46,9 +46,12 @@ gulp.task('style', function() {
 });
 
 gulp.task('security', function(cb) {
-  gulpRequireSafe({package: __dirname + '/package.json', stopOnError: true}, cb);
+  nsp({
+    package: __dirname + '/package.json',
+    stopOnError: true
+  }, cb);
 });
 
 gulp.task('default', function(cb) {
-  runSequence('test', ['lint', 'style', 'coveralls'], cb);
+  runSequence('test', ['lint', 'style', 'coveralls', 'security'], cb);
 });
