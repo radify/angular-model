@@ -20,6 +20,16 @@
       "name": "John Mercer",
       "email": "john@radify.io",
       "web": "http://radify.io"
+    },
+    {
+      "name": "Gavin Davies",
+      "email": "gavin@radify.io",
+      "web": "http://radify.io"
+    },
+    {
+      "name": "Warren Seymour",
+      "email": "warren@radify.io",
+      "web": "http://radify.io"
     }
   ],
   "repository": {
@@ -35,6 +45,7 @@
     "gulp-istanbul": "^0.10.2",
     "gulp-jscs": "^3.0.2",
     "gulp-jshint": "^1.12.0",
+    "gulp-ngdocs": "^0.2.13",
     "gulp-nsp": "^2.0.1",
     "jasmine-core": "^2.3.4",
     "karma": "^0.13.14",
