@@ -7,6 +7,7 @@ var jshint      = require('gulp-jshint');
 var jscs        = require('gulp-jscs');
 var nsp         = require('gulp-nsp');
 var runSequence = require('run-sequence');
+var istanbul = require('gulp-istanbul');
 
 /*
  * PLEASE NOTE: run-sequence is a
@@ -31,6 +32,33 @@ gulp.task('coveralls', function() {
   gulp.src('coverage/**/lcov.info')
     .pipe(coveralls());
 });
+
+// Task that calculates the unit test coverage for the module
+gulp.task('coverage', function(cb) {
+  new Server({
+    configFile: __dirname + '/config/karma.conf.js',
+    singleRun: true,
+    reporters: ['progress', 'coverage'],
+
+    preprocessors: {
+      'src/**/*.js':['coverage']
+    },
+
+    // optionally, configure the reporter
+    coverageReporter: {
+      reporters: [
+        {
+          type : 'html',
+          dir : 'build/coverage/'
+        },
+        {
+          type: 'text'
+        }
+      ]
+    }
+  }, cb).start();
+});
+
 
 gulp.task('lint', function() {
   return gulp.src([paths.src])
