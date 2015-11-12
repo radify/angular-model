@@ -677,6 +677,20 @@ describe('model', function() {
       }));
     });
 
+    describe('$delete()', function() {
+      it('erases the object form the API', inject(function(model) {
+
+        var selfurl = 'http://api/users/5';
+        var user = model('Users').create({$links: {self: {href: selfurl}}});
+
+        $httpBackend.expectDELETE(selfurl).respond(204);
+
+        user.$delete();
+
+        $httpBackend.flush();
+      }));
+    });
+
     describe('syncing', function() {
       it('should correctly update local copy on successful save', inject(function(model) {
         var message = model('Messages').create({
@@ -704,5 +718,99 @@ describe('model', function() {
         });
       }));
     });
+
+    describe('$collection', function() {
+      beforeEach(function() {
+        var data = [
+          {name: 'First Project', $links: {self: {href: 'http://api/projects/1138'}}},
+          {name: 'Second Project', $links: {self: {href: 'http://api/projects/1139'}}}
+        ];
+        $httpBackend.expectGET('http://api/projects').respond(200, JSON.stringify(data));
+      });
+
+      describe('add()', function() {
+        it('adds a new model instance to the API', inject(function(model) {
+          $httpBackend.expectPOST('http://api/projects/1140').respond(201);
+
+          model('Projects').all().then(function(result) {
+            var data = {name: 'Third Project', $links: {self: {href: 'http://api/projects/1140'}}};
+            var newItem = model('Projects').create({});
+            result.add(newItem, data);
+          });
+          $httpBackend.flush();
+        }));
+      });
+
+      describe('remove()', function() {
+        it('removes items from the API and from the cache', inject(function(model) {
+          $httpBackend.expectDELETE('http://api/projects/1138').respond(204);
+
+          model('Projects').all().then(function(result) {
+            expect(result.length).toEqual(2);
+            result.remove(0).then(function() {
+              expect(result.length).toEqual(1);
+            });
+          });
+          $httpBackend.flush();
+        }));
+      });
+    });
   });
+
+  describe('directive', function() {
+
+    var $httpBackend;
+
+    beforeEach(inject(function ($injector) {
+      $httpBackend = $injector.get('$httpBackend');
+    }));
+
+    afterEach(function () {
+      $httpBackend.verifyNoOutstandingExpectation();
+      $httpBackend.verifyNoOutstandingRequest();
+    });
+
+    describe('link directive', function() {
+      var elm, scope;
+
+      describe('when a relation, resource and href are provided', function() {
+        beforeEach(inject(function($rootScope, $compile) {
+          elm = angular.element('<link rel="resource" name="Messages" href="/api-of-your-system/Messages">');
+
+          scope = $rootScope;
+
+          $compile(elm)(scope);
+          scope.$digest();
+        }));
+
+        it("assigns the model's URL from the href attribute", inject(function(model) {
+          var message = model('Messages').create({
+            content: 'Hello!'
+          });
+
+          message.$save();
+
+          $httpBackend.expectPOST('/api-of-your-system/Messages').respond(201);
+          $httpBackend.flush();
+        }));
+      });
+
+      describe('when rel !== resource', function() {
+        beforeEach(inject(function($rootScope, $compile) {
+          elm = angular.element('<link rel="other" name="Messages" href="/api-of-your-system/Messages">');
+
+          scope = $rootScope;
+
+          $compile(elm)(scope);
+          scope.$digest();
+        }));
+
+        it("is ignored", inject(function(model) {
+          expect(model('Messages')).toBeUndefined();
+        }));
+      });
+
+    });
+  });
+
 });
