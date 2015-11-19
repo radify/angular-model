@@ -9,8 +9,7 @@
 (function(window, angular, undefined) {
 'use strict';
 
-var noop   = angular.noop,
-  forEach  = angular.forEach,
+var forEach = angular.forEach,
   extend   = angular.extend,
   copy     = angular.copy,
   isFunc   = angular.isFunction,
@@ -79,6 +78,35 @@ function serialize(obj, prefix) {
   return str.join('&');
 }
 
+/**
+ * @ngdoc overview
+ * @name ur.model
+ * @requires angular
+ * @requires window
+ * @description
+ * Simple HATEOS-oriented persistence module for AngularJS.
+ *
+ * Angular Model is a module that provides a simple way to bind client-side domain logic to JSON-based API resources
+ *
+ * By sticking to hypermedia design principles, Angular Model allows you to implement client applications that are
+ * cleanly decoupled from your server architecture.
+ *
+ * angular-model allows you to perform CRUD against an API in a manner similar to Active Record.
+ *
+ * In your AngularJS application, include the JavaScript:
+ ```html
+  // your specific paths may vary
+  <script src="node_modules/radify/angular-model.js"></script>
+  ```
+ *
+ * In your app configuration, state a dependency on Angular Model:
+
+ ```javascript
+ angular.module('myApp', [
+ 'ur.model'
+ ]);
+ ```
+ */
 angular.module('ur.model', []).provider('model', function() {
 
   var expr, // Used to evaluate expressions; initialized by the service invokation
@@ -138,11 +166,66 @@ angular.module('ur.model', []).provider('model', function() {
 
   var DEFAULT_METHODS = {
 
-    // Methods available on the model class
+    /**
+     * @ngdoc object
+     * @name ur.model:$class
+     * @description
+     * Methods available on the model class
+     *
+     * Analogous to static methods in the OOP world
+     *
+     * You can specify custom class methods:
+     *
+     yourApp.config(function(modelProvider) {
+       modelProvider.model('posts', {
+         $class: {
+           types: function() {
+             return ['announcement', 'article']
+           }
+         }
+       });
+     });
+     */
     $class: {
+      /**
+       * @ngdoc function
+       * @name all
+       * @methodOf ur.model:$class
+       * @param {object=} data Configuration of the request that will be sent to your API
+       * @param {object=} headers Map of custom headers to send to your API
+       *
+       * @description
+       * Retrieve collection of post instances from the API
+       * @example
+       ```
+       model('posts').all().then(function(posts) {
+         console.log(posts.length);
+       });
+       => 4
+       ```
+       * @returns {object} Promise from an API request
+       */
       all: function(data, headers) {
         return $request(null, this, 'GET', data, headers);
       },
+
+      /**
+       * @ngdoc function
+       * @name first
+       * @methodOf ur.model:$class
+       * @param {object=} data Configuration of the request that will be sent to your API
+       *
+       * @description
+       * Retrieve a single post instances from the API
+       * @example
+       ```
+       model('posts').first({name: 'some post'}).then(function(post) {
+         console.log(post._id);
+       });
+       => 42
+       ```
+       * @returns {object} Promise from an API request
+       */
       first: function(data) {
         return this.all(data).then(function(response) {
           return angular.isArray(response) ? response[0] : response;
@@ -150,13 +233,70 @@ angular.module('ur.model', []).provider('model', function() {
           return null;
         });
       },
+
+      /**
+       * @ngdoc function
+       * @name create
+       * @methodOf ur.model:$class
+       * @param {object=} data Configuration of the instance that you are creating. Merged with any defaults
+       *   specified when this model was declared.
+       *
+       * @description
+       * Creates an instance on of the model
+       *
+       * @example
+       ```
+       var post = model('Posts').create({});
+       ```
+       * @returns {object} angular-model instance
+       */
       create: function(data) {
         return this.instance(deepExtend(copy(this.$config().defaults), data || {}));
       },
     },
 
-    // Methods available on model instances
+    /**
+     * @ngdoc object
+     * @name ur.model:$instance
+     * @description
+     * Methods available on model instances
+     *
+     * You can use these when you have created or loaded a model instance, see the example
+     *
+     var post = model('posts').first({_id: 42});
+     console.log(post.name);
+     => "Post with ID 42"
+
+     post.name = 'renamed';
+     post.$save();
+     *
+     * You can specify custom instance methods:
+     *
+     yourApp.config(function(modelProvider) {
+       modelProvider.model('posts', {
+         $instance: {
+           $logo: function() {
+             return this.logo || '/logos/default.png';.
+           }
+         }
+       });
+     });
+     */
     $instance: {
+      /**
+       * @ngdoc function
+       * @name $save
+       * @methodOf ur.model:$instance
+       * @description
+       * Persist an instance to the API
+       * @example
+       ```
+       var post = model('posts').create({ name: 'some post' });
+       post.$save();
+       ```
+       * @param {object=} data Data to save to this model instance. Defaults to the result of `this.$modified()`
+       * @returns {object} Promise from an API request
+       */
       $save: function(data) {
         var method, requestData;
 
@@ -174,12 +314,50 @@ angular.module('ur.model', []).provider('model', function() {
 
         return $request(this, this.$model(), method, requestData);
       },
+
+      /**
+       * @ngdoc function
+       * @name $delete
+       * @methodOf ur.model:$instance
+       * @description
+       * Delete an instance from the API
+       * @example
+       ```
+       post.$delete();
+       ```
+       * @returns {object} Promise from an API request
+       */
       $delete: function() {
         return $request(this, this.$model(), 'DELETE');
       },
+
+      /**
+       * @ngdoc function
+       * @name $reload
+       * @methodOf ur.model:$instance
+       * @description
+       * Refresh an instance of a model from the API
+       * @example
+       ```
+       post.$reload();
+       ```
+       * @returns {object} Promise from an API request
+       */
       $reload: function() {
         return $request(this, this.$model(), 'GET');
       },
+
+      /**
+       * @ngdoc function
+       * @name $revert
+       * @methodOf ur.model:$instance
+       * @description
+       * Reset the model to the state it was originally in when you first got it from the API
+       * @example
+       ```
+       post.$revert();
+       ```
+       */
       $revert: function() {
         var original = copy(this.$original());
 
@@ -191,15 +369,67 @@ angular.module('ur.model', []).provider('model', function() {
           this[prop] = original[prop];
         }
       },
+
+      /**
+       * @ngdoc function
+       * @name $exists
+       * @methodOf ur.model:$instance
+       * @description
+       * Checks whether an object exists in the API, based on whether it has an identity URL.
+       * @example
+       ```
+       if (post.$exists()) { console.log('It exists'); }
+       ```
+       * @returns {boolean} True if the identifier of this instance exists in the API
+       */
       $exists: function() {
         return !!expr(this, this.$model().$config().identity).get();
       },
+
+      /**
+       * @ngdoc function
+       * @name $dirty
+       * @methodOf ur.model:$instance
+       * @description
+       * Returns boolean - true if a model instance is unmodified, else false. Inverse of $pristine.
+       * @example
+       ```
+       if (post.$pristine()) { console.log('It is just as it was when we got it from the API'); }
+       ```
+       * @returns {boolean} true if a model instance is modified, else false. Inverse of $pristine.
+       */
       $dirty: function() {
         return !this.$pristine();
       },
+
+      /**
+       * @ngdoc function
+       * @name $pristine
+       * @methodOf ur.model:$instance
+       * @description
+       * Returns boolean - false if a model instance is unmodified, else true. Inverse of $dirty.
+       * @example
+       ```
+       if (post.$dirty()) { console.log('Post has been modified'); }
+       ```
+       * @returns {boolean} true if a model instance is unmodified, else false. Inverse of $dirty.
+       */
       $pristine: function() {
         return equals(this, this.$original());
       },
+
+      /**
+       * @ngdoc function
+       * @name $modified
+       * @methodOf ur.model:$instance
+       * @description
+       * Returns a map of the properties that have been changed
+       * @example
+       ```
+       console.log(post.$modified());
+       ```
+       * @returns {object} Map of the fields that have been changed from the $pristine version
+       */
       $modified: function() {
         var original = this.$original(), diff = {};
 
@@ -215,6 +445,21 @@ angular.module('ur.model', []).provider('model', function() {
 
         return diff;
       },
+
+      /**
+       * @ngdoc function
+       * @name $related
+       * @methodOf ur.model:$instance
+       * @description
+       * Hydrates the $links property of the instance. $links are used so that an instance
+       * can tell the client which objects are related to it. For example, a `post` may have an
+       * `author` object related to it.
+       * @example
+       ```
+       console.log(post.links());
+       ```
+       * @returns {object} Promise from the API
+       */
       $related: function(name) {
         var link, model, instance;
 
@@ -233,16 +478,71 @@ angular.module('ur.model', []).provider('model', function() {
 
         return instance.$reload();
       },
+
+      /**
+       * @ngdoc function
+       * @name $hasRelated
+       * @methodOf ur.model:$instance
+       * @param {string} name Name of the related property to check for
+       * @description
+       * Does an instance have a relation of name `name`?
+       * @example
+       ```
+       if (post.$hasRelated('author')) { console.log('Post has an author'); }
+       ```
+       * @returns {boolean} true if a $link to `name` exists on this instance
+       */
       $hasRelated: function(name) {
         return isObject(this.$links[name]);
       }
     },
 
-    // Methods available on model collections
+    /**
+     * @ngdoc object
+     * @name ur.model:$collection
+     * @description
+     * Methods available on model collections
+     *
+     * You can use collection methods to deal with a bunch of instances together. This allows you to have powerful
+     * and expressive methods on collections.
+     *
+     * You can specify custom collection methods:
+     *
+     yourApp.config(function(modelProvider) {
+       modelProvider.model('posts', {
+         $collection: {
+           $hasArchived: function() {
+             return !angular.isUndefined(_.find(this, { archived: true }));
+           }
+         },
+       });
+     });
+     */
     $collection: {
+      /**
+       * @ngdoc function
+       * @name add
+       * @methodOf ur.model:$collection
+       * @param {object} object Object to persist data onto
+       * @param {object=} data Data to persist onto the object
+       * @description
+       * Saves the `object` with `data`
+       * @returns {boolean} true if a $link to `name` exists on this instance
+       */
       add: function(object, data) {
         return object.$save(data || {});
       },
+
+      /**
+       * @ngdoc function
+       * @name remove
+       * @methodOf ur.model:$collection
+       * @param {(number|object)} index Either the index of the item in the collection to remove, or the object
+       *     itself, which will be searched for in the collection
+       * @description
+       * Find `index` and delete it from the API, then remove it from the collection
+       * @returns {object} Promise from the API
+       */
       remove: function(index) {
         index = (typeof index !== 'number') ? index = this.indexOf(index) : index;
         var self = this, result = self[index].$delete();
@@ -302,13 +602,50 @@ angular.module('ur.model', []).provider('model', function() {
   }
 
   extend(this, {
-
+    /**
+     * @ngdoc function
+     * @name ur.model:model
+     * @param {string} name Name of the 'class', e.g. 'posts'
+     * @param {object=} options Config to initialise the model 'class' with. You can supply an object literal to
+     *     configure your model here.
+     * @description
+     * Main factory function for angular-model
+     *
+     * @example
+     ```
+     yourApp.config(function(modelProvider) {
+       modelProvider.model('posts', {
+         // configuration options
+         $instance: {
+           // custom instance functions
+         },
+         $class: {
+           // custom class functions
+         },
+         $collection: {
+           // custom collection functions
+         }
+       });
+     });
+     ```
+     * @returns {ur.model} instance of angular-model for the 'class' identified by 'name'
+     */
     model: function(name, options) {
       config(name, options);
       return this;
     },
 
-    // Returns the model service
+    /**
+     * @ngdoc function
+     * @name ur.model:$get
+     * @description:
+     * Get the model class factory
+     *
+     * @param {object} $http https://docs.angularjs.org/api/ng/service/$http
+     * @param {object} $parse https://docs.angularjs.org/api/ng/service/$parse
+     * @param {object} $q https://docs.angularjs.org/api/ng/service/$q
+     * @return {object} The model service
+     */
     $get: ['$http', '$parse', '$q', function($http, $parse, $q) {
       q = $q;
       http = $http;
@@ -383,8 +720,34 @@ angular.module('ur.model', []).provider('model', function() {
     };
   }
 
-}).directive('link', ['model', function(model) {
+})
 
+/**
+ * @ngdoc directive
+ * @name ur.model.directive:link
+ * @element link
+ * @restrict 'E'
+ * @param {string} rel Must be equal to "resource".
+ * @param {string} name The name of the angular-model "class" to use.
+ * @param {string} href Where should angular-model look for the API for this resource.
+ * @description
+ * angular-model will scan your page looking for `<link rel="resources">` tags. It will use these
+ * to work out where your API endpoints are for your angular-model classes.
+ *
+ * So, if you have a "class" Posts, you would define a link with an href pointing to the API endpoint
+ * for Posts. This should be a HATEOS-compliant API endpoint.
+ *
+ * @requires ur.model
+ *
+ * @example
+ ```html
+ <html ng-app="myApp">
+ <head>
+     <title>My Posts Application</title>
+     <link rel="resource" name="Posts" href="/api/posts">
+ ```
+ */
+.directive('link', ['model', function(model) {
   return {
     restrict: 'E',
     link: function(scope, element, attrs) {

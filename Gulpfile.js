@@ -7,7 +7,7 @@ var jshint      = require('gulp-jshint');
 var jscs        = require('gulp-jscs');
 var nsp         = require('gulp-nsp');
 var runSequence = require('run-sequence');
-var istanbul = require('gulp-istanbul');
+var istanbul    = require('gulp-istanbul');
 
 /*
  * PLEASE NOTE: run-sequence is a
@@ -20,6 +20,17 @@ var paths = {
   'spec': 'spec/**/*.js',
   'src': 'src/**/*.js'
 };
+
+gulp.task('ngdocs', [], function () {
+  var gulpDocs = require('gulp-ngdocs');
+  return gulp.src(paths.src)
+      .pipe(gulpDocs.process({
+        html5Mode: false,
+        startPage: '/api',
+        title: 'angular-model'
+      }))
+      .pipe(gulp.dest('./build/docs'));
+});
 
 gulp.task('test', function(done) {
   new Server({
