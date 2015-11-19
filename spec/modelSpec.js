@@ -761,11 +761,11 @@ describe('model', function() {
 
     var $httpBackend;
 
-    beforeEach(inject(function ($injector) {
+    beforeEach(inject(function($injector) {
       $httpBackend = $injector.get('$httpBackend');
     }));
 
-    afterEach(function () {
+    afterEach(function() {
       $httpBackend.verifyNoOutstandingExpectation();
       $httpBackend.verifyNoOutstandingRequest();
     });
@@ -775,7 +775,7 @@ describe('model', function() {
 
       describe('when a relation, resource and href are provided', function() {
         beforeEach(inject(function($rootScope, $compile) {
-          elm = angular.element('<link rel="resource" name="Messages" href="/api-of-your-system/Messages">');
+          elm = angular.element('<link rel=\'resource\' name=\'Messages\' href=\'/api-of-your-system/Messages\'>');
 
           scope = $rootScope;
 
@@ -783,7 +783,7 @@ describe('model', function() {
           scope.$digest();
         }));
 
-        it("assigns the model's URL from the href attribute", inject(function(model) {
+        it('assigns the model\'s URL from the href attribute', inject(function(model) {
           var message = model('Messages').create({
             content: 'Hello!'
           });
@@ -797,7 +797,7 @@ describe('model', function() {
 
       describe('when rel !== resource', function() {
         beforeEach(inject(function($rootScope, $compile) {
-          elm = angular.element('<link rel="other" name="Messages" href="/api-of-your-system/Messages">');
+          elm = angular.element('<link rel=\'other\' name=\'Messages\' href=\'/api-of-your-system/Messages\'>');
 
           scope = $rootScope;
 
@@ -805,7 +805,7 @@ describe('model', function() {
           scope.$digest();
         }));
 
-        it("is ignored", inject(function(model) {
+        it('is ignored', inject(function(model) {
           expect(model('Messages')).toBeUndefined();
         }));
       });
