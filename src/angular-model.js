@@ -638,7 +638,7 @@ angular.module('ur.model', []).provider('model', function() {
     /**
      * @ngdoc function
      * @name ur.model:$get
-     * @description:
+     * @description
      * Get the model class factory
      *
      * @param {object} $http https://docs.angularjs.org/api/ng/service/$http
