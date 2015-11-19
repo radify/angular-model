@@ -7,7 +7,6 @@ var jshint      = require('gulp-jshint');
 var jscs        = require('gulp-jscs');
 var nsp         = require('gulp-nsp');
 var runSequence = require('run-sequence');
-var istanbul    = require('gulp-istanbul');
 
 /*
  * PLEASE NOTE: run-sequence is a
