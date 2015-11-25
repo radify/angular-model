@@ -1,7 +1,7 @@
 {
   "name": "angular-model",
   "description": "Simple HATEOS-oriented persistence module for AngularJS.",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "license": "BSD-3-Clause",
   "maintainers": [
     {

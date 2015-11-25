@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased]
+
+## [0.6.1] - 2015-11-25
+### Added
+- Automates NPM publication
+
 ## [0.6.0] - 2015-11-19
 ### Added
 - Significantly increases documentation
@@ -49,6 +55,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - CHANGELOG
 
-[Unreleased]: https://github.com/radify/angular-model/compare/v0.5.0...HEAD
-[0.5.0]: https://github.com/radify/angular-model/compare/v0.4.1...v0.5.0
-[0.4.1]: https://github.com/radify/angular-model/compare/v0.4.0...v0.4.1
+[Unreleased]: https://github.com/radify/angular-model/compare/0.6.1...HEAD
+[0.6.1]: https://github.com/radify/angular-model/compare/0.6.0...0.6.1
+[0.6.0]: https://github.com/radify/angular-model/compare/0.5.0...0.6.0
+[0.5.0]: https://github.com/radify/angular-model/compare/0.4.1...0.5.0
+[0.4.1]: https://github.com/radify/angular-model/compare/0.4...0.4.1
